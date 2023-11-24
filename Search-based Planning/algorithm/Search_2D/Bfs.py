@@ -1,7 +1,7 @@
 '''
 BFS - one of all explored path:
-explored all neighbor until find the goal, combine explore_base from cost_neighbor of get_neighbor
-Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in breadth-first-order
+ explored all neighbor until find the goal, combine explore_base(inconsistent) from cost_neighbor of get_neighbor.
+ Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in breadth-first-order.
 '''
 
 import math

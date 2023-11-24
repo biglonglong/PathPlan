@@ -1,7 +1,7 @@
 '''
 Dijkstra - for minest explore_base:
-explore_base to guide, combine explore_base from cost_neighbor of get_neighbor
-Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in minest-cost-order
+ explore_base to guide, combine explore_base(inconsistent) from cost_neighbor of get_neighbor.
+ Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in minest-cost-order.
 '''
 
 import math

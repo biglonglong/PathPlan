@@ -1,6 +1,7 @@
 '''
 Anytime_Repairing_Astar (ARA*): 
-Astar Comparison - regressive weighted-heuristic:Suboptimal path to optimize,(open,closed,incons) to fasten the search
+Astar Comparison(weighted heuristic、incons): fasten searching suboptimal path, optimize suboptimal path.
+Attention: low_var_epsilon_init、var_epsilon_step、improve_path_break_iteration、fair cost(weighted heuristic, which makes points-near-source have larger cost_total comparing points-near-goal, lead to over-optimize points-near-goal)
 '''
 
 import math
@@ -12,9 +13,9 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + r"\..\..")
 from map import Plotting
 from map import Env
- 
+
 class arastar:
-    def __init__(self, source, goal):
+    def __init__(self, source, goal, var_epsilon, var_epsilon_step, iter_limitation, fair_cost):
         self.env = Env.env()
         self.obs = self.env.obs
         self.source = source
@@ -22,10 +23,19 @@ class arastar:
 
         self.motions = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
-        self.open_set = []
+        self.open_set = [] 
+        self.visited = []
         self.close_set = []
+        self.incons_set = [] 
+        self.path = []
+
         self.explore_base = dict()
         self.explore_tree = dict()
+
+        self.var_epsilon = var_epsilon
+        self.var_epsilon_step = var_epsilon_step
+        self.iter_limitation = iter_limitation
+        self.fair_cost = fair_cost
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
         goal = self.goal
@@ -36,7 +46,7 @@ class arastar:
             return abs(goal[0] - point[0]) + abs(goal[1] - point[1])
 
     def cost_total(self, point):
-        return self.explore_base[point] + self.cost_heuristic(point)
+        return self.explore_base[point] + self.var_epsilon * self.cost_heuristic(point) 
 
     def get_neighbor(self, point):
         return [(point[0] + move[0], point[1] + move[1]) for move in self.motions]
@@ -81,19 +91,26 @@ class arastar:
         
         return list(path)
 
-    def searching(self):
+    def torrent(self):
         self.explore_base[self.source] = 0
+        self.explore_base[self.goal] = math.inf
         self.explore_tree[self.source] = self.source
-        
         heapq.heappush(self.open_set,
                        (self.cost_total(self.source), self.source))
 
+    def improve_path(self, flag):
+        visited_each = []
+
         while self.open_set:
-            _, explore_point = heapq.heappop(self.open_set)
+            cost_total_explore_point, explore_point = heapq.heappop(self.open_set)
             self.close_set.append(explore_point)
-            
-            if explore_point == self.goal:  
-                break
+
+            if flag:
+                if explore_point == self.goal:
+                    break
+            else:
+                if cost_total_explore_point - self.iter_limitation>= self.explore_base[self.goal]:
+                    break
 
             for neighbor in self.get_neighbor(explore_point):
                 new_cost = self.explore_base[explore_point] + self.cost_neighbor(explore_point, neighbor)
@@ -103,18 +120,68 @@ class arastar:
                 if new_cost < self.explore_base[neighbor]:
                     self.explore_base[neighbor] = new_cost
                     self.explore_tree[neighbor] = explore_point
-                    heapq.heappush(self.open_set, (self.cost_total(neighbor), neighbor))
 
-        return self.extract_path(), self.close_set
+                    if neighbor not in self.close_set:
+                        heapq.heappush(self.open_set, 
+                                       (self.cost_total(neighbor), neighbor))
+                    else:
+                        self.incons_set.append(neighbor)
+
+                    visited_each.append(neighbor)     
+
+        self.visited.append(visited_each)
+
+    def update_var_epsilon(self):
+        degree_convergence = float("inf")
+
+        if self.open_set:
+            degree_convergence = min(self.explore_base[pointpair[1]] + self.cost_heuristic(pointpair[1]) for pointpair in self.open_set)
+        if self.incons_set:
+            degree_convergence = min(degree_convergence,
+                                min(self.explore_base[point] + self.cost_heuristic(point) for point in self.incons_set))
+
+        return min(self.var_epsilon, (self.explore_base[self.goal] + 0.0) / degree_convergence)
+
+    def searching(self):
+        self.torrent()
+        self.improve_path(True)
+        self.path.append(self.extract_path())
+
+        while self.update_var_epsilon() > 1:
+            self.var_epsilon -= self.var_epsilon_step
+
+            for point in self.incons_set:
+                heapq.heappush(self.open_set, (self.cost_total(point), point))
+            
+            self.incons_set = []
+            self.close_set = []
+            
+            self.improve_path(False)
+            self.path.append(self.extract_path())
+
+        return self.path, self.visited
 
 def main():
-    source = (5, 5)
-    goal = (45, 25)
+    source = (5, 25)
+    goal = (45, 5)
 
-    AStar = astar(source, goal)
+    # more iteration, more optimal path
+    iter_limitation = 10
+
+    # get points-near-source optimal path
+    var_epsilon = 1.7
+    var_epsilon_step = 0.2
+
+    # make points in suboptimal path lower cost but I didn't
+    fair_cost = 0.8   
+
+    ARastar = arastar(source, goal, var_epsilon, var_epsilon_step, iter_limitation, fair_cost)
     plot = Plotting.plotting(source, goal)
-    path, visited = AStar.searching()
-    plot.animation("A*", path, "Astar", visited)
+    path, visited = ARastar.searching()
+    plot.animation("Anytime_Repairing_Astar (ARA*)", path, "ARAstar", visited)
+
 
 if __name__ == '__main__':
     main()
+
+

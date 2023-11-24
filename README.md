@@ -112,5 +112,29 @@ genetic algorithm ()
 ACO algorithm ()
 particle swarm algorithm ()
 
+## Field D*
+
+Field D*扩展了D*和D* Lite，是一种基于插值（ interpolation-based ）的规划算法，它使用线性插值来有效地生成低成本路径，从而消除不必要的转向。
+
+在给定线性插值假设的情况下，路径是最优的，并且在实践中非常有效。该算法目前被各种现场机器人系统使用。
+
+关于Field D*的详细内容可以看下面这篇论文：
+
+- [Field D*: An Interpolation-based Path Planner and Replanner](https://qiangbo-workspace.oss-cn-shanghai.aliyuncs.com/2019-02-05-a-star-algorithm/Field D*- An Interpolation-based Path Planner and Replanner.pdf)
+
+## Block A*
+
+Block A*扩展自A*，但它操作是一块（block）单元而不是单个单元。
+
+其open_set中的每个条目都是已到达但尚未扩展的块，或者需要重新扩展的块。
+
+open_set中块的优先级称为其堆值（heap value）。与A*类似，Block A*中的基本循环是删除具有最低堆值的条目并将其展开。在扩展期间使用LDDB来计算正在扩展的块中的边界单元的g值。
+
+LDDB是一种新型数据库，它包含了本地邻域边界点之间的距离。
+
+关于Block A*的更多内容可以看下面这篇论文：
+
+- [Block A*: Database-Driven Search with Applications in Any-angle Path-Planning](https://qiangbo-workspace.oss-cn-shanghai.aliyuncs.com/2019-02-05-a-star-algorithm/Block A*- Database-Driven Search with Applications in Any-angle Path-Planning.pdf)
+
 
 

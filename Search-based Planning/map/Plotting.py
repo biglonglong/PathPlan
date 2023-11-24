@@ -21,7 +21,7 @@ class plotting:
         plt.plot(self.goal[0], self.goal[1], color="green", marker="s")
         plt.plot(obs_x, obs_y, "ks")
 
-    def plot_visited(self, *args):
+    def plot_visited(self, color_visited, *args):
         count = 0
         length = 40
         plot_explore_points = []
@@ -34,7 +34,7 @@ class plotting:
 
             for point in args[0]:
                 count += 1
-                plot_explore_point = plt.plot(point[0], point[1], color="gray", marker='s')
+                plot_explore_point = plt.plot(point[0], point[1], color=color_visited, marker='s')
                 plot_explore_points = plot_explore_points + plot_explore_point
 
                 if count % length == 0 or count == len(args[0]):
@@ -50,22 +50,22 @@ class plotting:
             for i in range(max(len_visited_for, len_visited_back)):
                 if i < len_visited_for:
                     count += 1
-                    plot_explore_point_for = plt.plot(args[0][i][0], args[0][i][1], color="gray", marker='s')
+                    plot_explore_point_for = plt.plot(args[0][i][0], args[0][i][1], color=color_visited, marker='s')
                     plot_explore_points = plot_explore_points + plot_explore_point_for
                 if i < len_visited_back:
                     count += 1
-                    plot_explore_point_back = plt.plot(args[1][i][0], args[1][i][1], color="gray", marker='s')
+                    plot_explore_point_back = plt.plot(args[1][i][0], args[1][i][1], color=color_visited, marker='s')
                     plot_explore_points = plot_explore_points + plot_explore_point_back
 
                 if count % length == 0 or count == len(args[0]+args[1]):
                     self.ims.append(plot_explore_points)
                     plt.pause(0.01)
 
-    def plot_path(self, path):
+    def plot_path(self, path, color_path):
         path_x = [path[i][0] for i in range(len(path))]
         path_y = [path[i][1] for i in range(len(path))]
         
-        plot_path = plt.plot(path_x, path_y, color='r', linewidth='3')
+        plot_path = plt.plot(path_x, path_y, color=color_path, linewidth='3')
         self.ims.append(self.ims[-1] + plot_path)
         plt.pause(1.0)
 
@@ -78,34 +78,41 @@ class plotting:
         self.plot_env(name)
 
         if len(args) == 1:
-            self.plot_visited(args[0])
+            if type(args[0]) == list:
+                cl_v, cl_p = self.color_list()
+
+                for k in range(len(path)):
+                    self.plot_visited(cl_v[k], args[0][k])
+                    self.plot_path(path[k], cl_p[k])
+
+            else:
+                self.plot_visited("gray", args[0])
+                self.plot_path(path, "red")
+
         else:
             self.plot_visited(args[0], args[1])
+            self.plot_path(path, "red")
         
-        self.plot_path(path)
-        
-        # ani = animation.ArtistAnimation(fig, self.ims, interval=100,
-        #                                     repeat_delay=1000, blit=True)
-        # ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{gifname}.gif",
-        #             writer="pillow")
+        ani = animation.ArtistAnimation(fig, self.ims, interval=100,
+                                            repeat_delay=1000, blit=True)
+        ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{gifname}.gif",
+                    writer="pillow")
         
         plt.show()
 
-
-
-    # @staticmethod
-    # def color_list():
-    #     cl_v = ['silver',
-    #             'wheat',
-    #             'lightskyblue',
-    #             'royalblue',
-    #             'slategray']
-    #     cl_p = ['gray',
-    #             'orange',
-    #             'deepskyblue',
-    #             'red',
-    #             'm']
-    #     return cl_v, cl_p
+    @staticmethod
+    def color_list():
+        cl_v = ['silver',
+                'wheat',
+                'lightskyblue',
+                'royalblue',
+                'slategray']
+        cl_p = ['gray',
+                'orange',
+                'deepskyblue',
+                'red',
+                'm']
+        return cl_v, cl_p
 
     # @staticmethod
     # def color_list_2():
@@ -138,16 +145,7 @@ class plotting:
     #     self.plot_path(path_combine)
     #     plt.show()
 
-    # def animation_ara_star(self, path, visited, name):
-    #     self.plot_grid(name)
-    #     cl_v, cl_p = self.color_list()
-
-    #     for k in range(len(path)):
-    #         self.plot_visited(visited[k], cl_v[k])
-    #         self.plot_path(path[k], cl_p[k], True)
-    #         plt.pause(0.5)
-
-    #     plt.show()
+ 
 
 
 

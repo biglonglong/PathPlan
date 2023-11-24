@@ -1,6 +1,7 @@
 '''
 Bidirectional_Astar: 
-Astar Comparison - bi-direction:half time-complexity, no suitable to asymmetrical env
+Astar Comparison(bi-direction): half time-complexity
+Attention: symmetric env & heuristic(difference of COST-source2goal and COST-goal2source leads to nofind best path because regard point_meet as goal)
 '''
 
 import math

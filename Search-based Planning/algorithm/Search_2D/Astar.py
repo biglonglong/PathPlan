@@ -1,7 +1,8 @@
 '''
 Astar - for minest cost_total:
-cost_heuristic&explore_base to guide, combine explore_base from cost_neighbor of get_neighbor
-Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in minest-cost-order
+ cost_heuristic&explore_base to guide, combine explore_base(inconsistent) from cost_neighbor of get_neighbor.
+ Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in minest-cost-order.
+Attention: maintain consistency(cost_heuristic is usually designed not to overestimate actual costs)
 '''
 
 import math
