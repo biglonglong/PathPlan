@@ -36,8 +36,8 @@ class dijkstra:
             return True
         
         current_x,current_y,end_x,end_y = start[0],start[1],end[0],end[1]
-        x_change = end_x - current_x / max(abs(end_x - current_x),1)
-        y_change = end_y - current_y / max(abs(end_y - current_y),1)       
+        x_change = (end_x - current_x) / max(abs(end_x - current_x),1)
+        y_change = (end_y - current_y) / max(abs(end_y - current_y),1)       
 
         while(current_x != end_x or current_y != end_y):
             current_x += x_change

@@ -1,7 +1,7 @@
 '''
-Learning_Real-time_Astar_Deeper (LRTA*-D):
-Astar Comparison(real-time local-heuristic&path、N steps per-update): explore unknown dynamic-env, skipout local-optima, improve learning efficiency.
-Attention: suitable heuristic update(only local-info considered at each N steps, and find a globally optimal solution is difficult. when local-path extracting, explore_base is discarded for real-time)
+Real-time_Adaptive_Astar_Deeper (RTAA*-D):
+LRTAstar Comparison(real-time local-optimal-goal): better local-path quality for global.
+Attention: suitable local_goal update(the optimal substructure property may not be satisfied)
 '''
 
 import math
@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + r"\..\..")
 from map import Plotting
 from map import Env
 
-class lrtastar:
+class rtaastar:
     def __init__(self, source, goal, N):
         self.env = Env.env()
         self.obs = self.env.obs
@@ -78,7 +78,7 @@ class lrtastar:
         else:
             return x_dis + y_dis
 
-    def extract_path_former(self, local_source):
+    def extract_path_former(self, local_source, local_goal):
         path = [local_source]
         point_path = local_source
         
@@ -87,10 +87,10 @@ class lrtastar:
             for neighbor in self.get_neighbor(point_path):
                     heuristic_neighbor[neighbor] = self.table_heuristic[neighbor]
 
-            point_path = min(heuristic_neighbor, key=heuristic_neighbor.get)
+            point_path = max(heuristic_neighbor, key=heuristic_neighbor.get)
             path.append(point_path)
 
-            if point_path not in self.close_set:
+            if point_path == local_goal:
                 break
 
         return list(path)
@@ -120,30 +120,20 @@ class lrtastar:
             for j in range(self.env.y_range):
                 self.table_heuristic[(i, j)] = self.cost_heuristic((i, j))       
 
-    def update_heuristic(self):
+    def update_local_goal(self):
+        cost_open_set = dict()
         heuristic_updated = dict()
+        
+        for _, point in self.open_set:
+            cost_open_set[point] = self.cost_total(point)
+        local_goal = min(cost_open_set, key=cost_open_set.get)
+
+        cost_total_local_goal = cost_open_set[local_goal]
         for point in self.close_set:
-            heuristic_updated[point] = math.inf
+            heuristic_updated[point] = cost_total_local_goal - self.explore_base[point]
 
-        flag = True
-        while flag:
-            flag = False
-
-            for point in self.close_set:
-                heuristic_neighbor = []
-                for neighbor in self.get_neighbor(point):
-                    if neighbor not in self.close_set:
-                        heuristic_neighbor.append(self.cost_neighbor(point, neighbor) + self.table_heuristic[neighbor])
-                    else:
-                        heuristic_neighbor.append(self.cost_neighbor(point, neighbor) + heuristic_updated[neighbor])
-
-                min_heuristic_neighbor = min(heuristic_neighbor)
-                if heuristic_updated[point] > min_heuristic_neighbor:
-                    heuristic_updated[point] = min_heuristic_neighbor
-                    flag = True
-
-        return heuristic_updated            
-
+        return local_goal, heuristic_updated            
+ 
     def searching(self):
         self.torrent()
         local_source = self.source
@@ -183,12 +173,12 @@ class lrtastar:
                         heapq.heappush(self.open_set, (self.cost_total(neighbor), neighbor))
                 
                 if count == self.N:
-                    heuristic_updated = self.update_heuristic()
+                    local_goal, heuristic_updated = self.update_local_goal()
                     for point_heuristic in heuristic_updated:
                         self.table_heuristic[point_heuristic] = heuristic_updated[point_heuristic]
 
-                    local_path = self.extract_path_former(local_source)
-                    local_source = local_path[-1]
+                    local_path = self.extract_path_former(local_source, local_goal)
+                    local_source = local_goal
                     self.path.append(local_path)
                     self.visited.append(self.close_set)
                     break
@@ -200,10 +190,15 @@ def main():
     # sigle-step real-time interval
     N = 250
 
-    LRtastar = lrtastar(source, goal, N)
+    RTaastar = rtaastar(source, goal, N)
     plot = Plotting.plotting(source, goal)
-    path, visited = LRtastar.searching()
-    plot.animation("Learning_Real-time_Astar_Deeper (LRTA*-D)", path, "LRTAstar_Deeper", visited)
+    path, visited =RTaastar.searching()
+    plot.animation("Real-time_Adaptive_Astar_Deeper (RTAA*-D)", path, "RTAAstar_Deeper", visited)
 
 if __name__ == '__main__':
     main()
+
+
+
+'''
+'''
