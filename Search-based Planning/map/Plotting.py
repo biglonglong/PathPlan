@@ -93,10 +93,10 @@ class plotting:
             self.plot_visited(args[0], args[1])
             self.plot_path(path, "red")
         
-        ani = animation.ArtistAnimation(fig, self.ims, interval=100,
-                                            repeat_delay=1000, blit=True)
-        ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{gifname}.gif",
-                    writer="pillow")
+        # ani = animation.ArtistAnimation(fig, self.ims, interval=100,
+        #                                     repeat_delay=1000, blit=True)
+        # ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{gifname}.gif",
+        #             writer="pillow")
         
         plt.show()
 
@@ -106,46 +106,14 @@ class plotting:
                 'wheat',
                 'lightskyblue',
                 'royalblue',
-                'slategray']
+                'slategray',
+                'mediumpurple',
+                'plum',]
         cl_p = ['gray',
                 'orange',
                 'deepskyblue',
                 'red',
-                'm']
+                'm',
+                'purple',
+                'magenta',]
         return cl_v, cl_p
-
-    # @staticmethod
-    # def color_list_2():
-    #     cl = ['silver',
-    #           'steelblue',
-    #           'dimgray',
-    #           'cornflowerblue',
-    #           'dodgerblue',
-    #           'royalblue',
-    #           'plum',
-    #           'mediumslateblue',
-    #           'mediumpurple',
-    #           'blueviolet',
-    #           ]
-    #     return cl
-
-    # def animation_lrta(self, path, visited, name):
-    #     self.plot_grid(name)
-    #     cl = self.color_list_2()
-    #     path_combine = []
-
-    #     for k in range(len(path)):
-    #         self.plot_visited(visited[k], cl[k])
-    #         plt.pause(0.2)
-    #         self.plot_path(path[k])
-    #         path_combine += path[k]
-    #         plt.pause(0.2)
-    #     if self.source in path_combine:
-    #         path_combine.remove(self.source)
-    #     self.plot_path(path_combine)
-    #     plt.show()
-
- 
-
-
-

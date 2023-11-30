@@ -30,6 +30,9 @@ class astar:
         self.explore_tree = dict()
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
+        if point in self.obs:
+            return math.inf
+
         goal = self.goal
 
         if heuristic_type == "euclidean":
@@ -120,54 +123,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-    # def searching_repeated_astar(self, e):
-    #     path, visited = [], []
-
-    #     while e >= 1:
-    #         p_k, v_k = self.repeated_searching(self.source, self.goal, e)
-    #         path.append(p_k)
-    #         visited.append(v_k)
-    #         e -= 0.5
-
-    #     return path, visited
-
-    # def repeated_searching(self, source, goal, e):
-    #     """
-    #     run A* with weight e.
-    #     :param source: starting state
-    #     :param goal: goal state
-    #     :param e: weight of a*
-    #     :return: path and visited order.
-    #     """
-
-    #     g = {source: 0, goal: float("inf")}
-    #     PARENT = {source: source}
-    #     open_set = []
-    #     close_set = []
-    #     heapq.heappush(open_set,
-    #                    (g[source] + e * self.heuristic(source), source))
-
-    #     while open_set:
-    #         _, s = heapq.heappop(open_set)
-    #         close_set.append(s)
-
-    #         if s == goal:
-    #             break
-
-    #         for s_n in self.get_neighbor(s):
-    #             new_cost = g[s] + self.cost(s, s_n)
-
-    #             if s_n not in g:
-    #                 g[s_n] = math.inf
-
-    #             if new_cost < g[s_n]:  # conditions for updating Cost
-    #                 g[s_n] = new_cost
-    #                 PARENT[s_n] = s
-    #                 heapq.heappush(open_set, (g[s_n] + e * self.heuristic(s_n), s_n))
-
-    #     return self.extract_path(PARENT), close_set
-
-    # path, visited = astar.searching_repeated_astar(2.5)               # initial weight e = 2.5
-    # plot.animation_ara_star(path, visited, "Repeated A*")

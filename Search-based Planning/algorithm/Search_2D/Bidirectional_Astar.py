@@ -33,6 +33,9 @@ class bidirectional_astar:
         self.explore_tree_back = dict()
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
+        if point in self.obs:
+            return math.inf
+
         goal = self.goal
 
         if heuristic_type == "euclidean":

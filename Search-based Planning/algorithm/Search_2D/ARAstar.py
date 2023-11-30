@@ -24,13 +24,13 @@ class arastar:
         self.motions = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
         self.open_set = [] 
-        self.visited = []
         self.close_set = []
         self.incons_set = [] 
-        self.path = []
-
         self.explore_base = dict()
         self.explore_tree = dict()
+
+        self.visited = []
+        self.path = []
 
         self.var_epsilon = var_epsilon
         self.var_epsilon_step = var_epsilon_step
@@ -38,6 +38,9 @@ class arastar:
         self.fair_cost = fair_cost
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
+        if point in self.obs:
+            return math.inf
+
         goal = self.goal
 
         if heuristic_type == "euclidean":
@@ -132,7 +135,7 @@ class arastar:
         self.visited.append(visited_each)
 
     def update_var_epsilon(self):
-        degree_convergence = float("inf")
+        degree_convergence = math.inf
 
         if self.open_set:
             degree_convergence = min(self.explore_base[pointpair[1]] + self.cost_heuristic(pointpair[1]) for pointpair in self.open_set)
