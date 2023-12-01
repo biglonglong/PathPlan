@@ -78,7 +78,7 @@ class plotting:
         self.plot_env(name)
 
         if len(args) == 1:
-            if type(args[0]) == list:
+            if type(args[0][0]) == list:
                 cl_v, cl_p = self.color_list()
 
                 for k in range(len(path)):
@@ -90,13 +90,13 @@ class plotting:
                 self.plot_path(path, "red")
 
         else:
-            self.plot_visited(args[0], args[1])
+            self.plot_visited("gray", args[0], args[1])
             self.plot_path(path, "red")
         
-        # ani = animation.ArtistAnimation(fig, self.ims, interval=100,
-        #                                     repeat_delay=1000, blit=True)
-        # ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{gifname}.gif",
-        #             writer="pillow")
+        ani = animation.ArtistAnimation(fig, self.ims, interval=100,
+                                            repeat_delay=1000, blit=True)
+        ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{gifname}.gif",
+                    writer="pillow")
         
         plt.show()
 

@@ -46,11 +46,16 @@ In addition, the project is based on [zhm-real/PathPlanning](https://github.com/
     <td><img src=".\Search-based Planning\map\gif\Bidirectional_Astar.gif" alt="Bidirectional_Astar" width="400"/></a></td>
   </tr>
   <tr>
+    <td><img src=".\Search-based Planning\map\gif\Repeated_Astar.gif" alt="Repeated_Astar" width="400"/></a></td>
     <td><img src=".\Search-based Planning\map\gif\ARAstar.gif" alt="ARAstar" width="400"/></a></td>
+  </tr>
+  <tr>
     <td><img src=".\Search-based Planning\map\gif\LRTAstar_Deeper.gif" alt="LRTAstar_Deeper" width="400"/></a></td>
+    <td><img src=".\Search-based Planning\map\gif\RTaAstar_Deeper.gif" alt="RTaAstar_Deeper" width="400"/></a></td>
   </tr>
 </table>
 </div>
+
 
 
 

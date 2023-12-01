@@ -1,9 +1,7 @@
 '''
 Learning_Real-time_Astar_Deeper (LRTA*-D):
 Astar Comparison(real-time local-heuristic&path、N steps per-update): explore unknown dynamic-env, skipout local-optima, improve learning efficiency.
-Attention: suitable heuristic update(only local-info considered at each N steps, and find a globally optimal solution is difficult.
-                                     when local-path extracting, explore_base is discarded for real-time.
-                                     every update_heuristic is a process of explore heuristic-right before execute-path)
+Attention: suitable update_heuristic (a process of passing local-distant-env to neighbor by heuristic before extracting path, but only local-info considered at each N steps, so finding a globally optimal solution is difficult)
 '''
 
 import math

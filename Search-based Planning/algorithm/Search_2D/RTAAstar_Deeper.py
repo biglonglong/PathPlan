@@ -1,7 +1,7 @@
 '''
 Real-time_Adaptive_Astar_Deeper (RTAA*-D):
-LRTAstar Comparison(real-time local-optimal-goal): better local-path quality for global.
-Attention: suitable local_goal update(the optimal substructure property may not be satisfied)
+LRTAstar Comparison(real-time local-optimal-goal): better global quality, less calculation.
+Attention: suitable extract_path_former、N(in update_local_goal, heuristic_updated is global, but local_goal is local, which makes extracting local-path is difficult[fallin local-eddies])
 '''
 
 import math
@@ -85,17 +85,17 @@ class rtaastar:
     def extract_path_former(self, local_source, local_goal):
         path = [local_source]
         point_path = local_source
+        explored = [local_source]
         
         while True:
             heuristic_neighbor = dict()
             for neighbor in self.get_neighbor(point_path):
+                if neighbor not in explored:
                     heuristic_neighbor[neighbor] = self.table_heuristic[neighbor]
     
-            # print(point_path)
-            # print(heuristic_neighbor)
-
-            point_path = max(heuristic_neighbor, key=heuristic_neighbor.get)
+            point_path = min(heuristic_neighbor, key=heuristic_neighbor.get)
             path.append(point_path)
+            explored.append(point_path)
 
             if point_path == local_goal:
                 break
@@ -128,19 +128,18 @@ class rtaastar:
                 self.table_heuristic[(i, j)] = self.cost_heuristic((i, j))       
 
     def update_local_goal(self):
-        cost_open_set = dict()
         heuristic_updated = dict()
         
+        local_goal = (-1, -1)
+        minest_cost_total = math.inf
         for _, point in self.open_set:
-            cost_open_set[point] = self.cost_total(point)
-        local_goal = min(cost_open_set, key=cost_open_set.get)
+            temp_cost_total = self.cost_total(point)
+            if temp_cost_total < minest_cost_total:
+                local_goal = point
+                minest_cost_total = temp_cost_total
 
-        cost_total_local_goal = cost_open_set[local_goal]
         for point in self.close_set:
-            heuristic_updated[point] = self.cost_neighbor(point, local_goal)
-            if point == (5, 10):
-                print(local_goal)
-                print(self.cost_neighbor(point, local_goal))
+            heuristic_updated[point] = minest_cost_total - self.explore_base[point]
             
         return local_goal, heuristic_updated            
  
@@ -198,7 +197,7 @@ def main():
     goal = (45, 25)
 
     # sigle-step real-time interval
-    N = 250
+    N = 240
 
     RTaastar = rtaastar(source, goal, N)
     plot = Plotting.plotting(source, goal)
@@ -207,8 +206,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-'''
-'''
