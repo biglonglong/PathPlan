@@ -1,7 +1,9 @@
 '''
 Learning_Real-time_Astar_Deeper (LRTA*-D):
 Astar Comparison(real-time local-heuristic&path、N steps per-update): explore unknown dynamic-env, skipout local-optima, improve learning efficiency.
-Attention: suitable heuristic update(only local-info considered at each N steps, and find a globally optimal solution is difficult. when local-path extracting, explore_base is discarded for real-time)
+Attention: suitable heuristic update(only local-info considered at each N steps, and find a globally optimal solution is difficult.
+                                     when local-path extracting, explore_base is discarded for real-time.
+                                     every update_heuristic is a process of explore heuristic-right before execute-path)
 '''
 
 import math
@@ -59,11 +61,15 @@ class lrtastar:
         x_change = (end_x - current_x) / max(abs(end_x - current_x),1)
         y_change = (end_y - current_y) / max(abs(end_y - current_y),1)       
 
-        while(current_x != end_x or current_y != end_y):
+        while(current_x != end_x):
             current_x += x_change
+            if (current_x,current_y) in self.obs:
+                return True
+        while(current_y != end_y):
             current_y += y_change
             if (current_x,current_y) in self.obs:
                 return True
+            
         return False
         
     def cost_neighbor(self, start, end, neighbor_type = "diagonal"):

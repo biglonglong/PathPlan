@@ -60,11 +60,15 @@ class bidirectional_astar:
         x_change = (end_x - current_x) / max(abs(end_x - current_x),1)
         y_change = (end_y - current_y) / max(abs(end_y - current_y),1)       
 
-        while(current_x != end_x or current_y != end_y):
+        while(current_x != end_x):
             current_x += x_change
+            if (current_x,current_y) in self.obs:
+                return True
+        while(current_y != end_y):
             current_y += y_change
             if (current_x,current_y) in self.obs:
                 return True
+            
         return False
         
     def cost_neighbor(self, start, end, neighbor_type = "diagonal"):
