@@ -13,11 +13,11 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + r"\..\..")
 from map import Plotting
-from map import Env
+from map import Env_Base
 
 class bidirectional_astar:
     def __init__(self, source, goal):
-        self.env = Env.env()
+        self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
         self.goal = goal

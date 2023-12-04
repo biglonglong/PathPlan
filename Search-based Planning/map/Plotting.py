@@ -2,12 +2,12 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from map import Env
+from map import Env_Base
 
 class plotting:
     def __init__(self, source, goal):
         self.source, self.goal = source, goal
-        self.env = Env.env()
+        self.env = Env_Base.env()
         self.obs = self.env.obs
         self.ims = []
 
