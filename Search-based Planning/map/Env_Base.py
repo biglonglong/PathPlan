@@ -27,6 +27,3 @@ class env:
             obs.add((40, i))
 
         return obs
-
-    def update_obs(self, obs):
-        self.obs = obs

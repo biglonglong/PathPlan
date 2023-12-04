@@ -4,7 +4,7 @@ Dstar - for minest cost_neighbor:
  Defaults cost_neighbor(point, new_obs) is math.inf, process_state will spread the new_obs_info until find another exlore_tree_point.
 Attention: k as the comparsion of h for whether h is modified
 """
-# self.plot baseEnv
+
 import math
 import heapq
 import numpy as np
@@ -32,9 +32,7 @@ class dstar:
         self.k = dict()         # minest_cost_goal
 
         self.explore_tree = dict()
-
-        # self.plot = plotting.Plotting(self.s_start, self.s_goal)
-        # self.fig = plt.figure()
+        self.path = []
 
     def get_neighbor(self, point):
         return [(point[0] + move[0], point[1] + move[1]) for move in self.motions]
@@ -127,11 +125,23 @@ class dstar:
             if self.t.get(self.source) == 'CLOSED':
                 break
     
-        return self.extract_path(), self.closed_set
+        self.path = self.extract_path()
 
-    def on_press(self, event):
-        x, y = int(event.xdata), int(event.ydata)
-        print(x,y)
+        return self.path, self.closed_set
+
+    def on_press(self, event, plot):
+        x, y = round(event.xdata), round(event.ydata)
+        if x < 0 or x > self.env.x_range - 1 or y < 0 or y > self.env.y_range - 1:
+            print("error area!")
+        else:
+            if (x, y) not in self.obs:
+                self.obs.add((x, y))
+                plot.update_obs(self.obs)
+                plot.animation("D*", self.path, "Dstar", self.closed_set)
+                
+                plt.gcf().canvas.draw_idle()
+                print("add obstacle at: ", (x, y))
+                
 
 def main():
     source = (5, 5)
@@ -142,22 +152,8 @@ def main():
     path, visited = DStar.plan()
     plot.animation("D*", path, "Dstar", visited)
 
-    plt.gcf().canvas.mpl_connect('button_press_event', on_press)
-
+    plt.gcf().canvas.mpl_connect('button_press_event',  lambda event: DStar.on_press(event, plot=plot))
     plt.show()
-
-    # def on_press(self, event):
-    #     x, y = int(event.xdata), int(event.ydata)
-    #     if x < 0 or x > self.env.x_range - 1 or y < 0 or y > self.env.y_range - 1:
-    #         print("error area!")
-    #     else:
-    #         if (x, y) not in self.obs:
-    #             print("add obstacle at: ", (x, y))
-    #             self.obs.add((x, y))
-    #             self.env.update_obs(self.obs)
-
-    #     plt.gcf().canvas.mpl_connect('button_press_event', self.on_press)
-
 
 if __name__ == '__main__':
     main()

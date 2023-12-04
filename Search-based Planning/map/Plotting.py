@@ -9,7 +9,10 @@ class plotting:
         self.source, self.goal = source, goal
         self.env = Env_Base.env()
         self.obs = self.env.obs
-        self.ims = []
+        self.ims = [[]]
+        
+    def update_obs(self, obs):
+        self.obs = obs
 
     def plot_env(self, name):
         obs_x = [obs[0] for obs in self.obs]
@@ -22,14 +25,14 @@ class plotting:
         plt.plot(obs_x, obs_y, "ks")
 
     def plot_visited(self, color_visited, *args):
-        count = 0
-        length = 40
-        plot_explore_points = []
-
         if self.source in args[0]:
             args[0].remove(self.source)
         if self.goal in args[0]:
             args[0].remove(self.goal)
+
+        count = 0
+        length = 40
+        plot_explore_points = []
 
         if len(args) == 1:
             for point in args[0]:
@@ -38,7 +41,7 @@ class plotting:
                 plot_explore_points = plot_explore_points + plot_explore_point
 
                 if count % length == 0 or count == len(args[0]):
-                    self.ims.append(plot_explore_points)
+                    self.ims.append(self.ims[-1] + plot_explore_points)
                     plt.pause(0.01)
         else:
             if self.source in args[1]:
@@ -58,7 +61,7 @@ class plotting:
                     plot_explore_points = plot_explore_points + plot_explore_point_back
 
                 if count % length == 0 or count == len(args[0]+args[1]):
-                    self.ims.append(plot_explore_points)
+                    self.ims.append(self.ims[-1] + plot_explore_points)
                     plt.pause(0.01)
 
     def plot_path(self, color_path, path):
@@ -70,32 +73,29 @@ class plotting:
         plt.pause(1.0)
 
     def animation(self, name, path, gifname="test", *args):
-        fig = plt.figure()
-
         plt.gcf().canvas.mpl_connect('key_release_event',
                         lambda event: [exit(0) if event.key == 'escape' else None])
         
         self.plot_env(name)
 
+        cl_v, cl_p = self.color_list()
+        random_num = np.random.randint(0,len(cl_v))
+
         if len(args) == 1:
             if type(args[0][0]) == list:
-                cl_v, cl_p = self.color_list()
-                
                 for k in range(len(path)):
                     random_num = np.random.randint(0,len(cl_v))
                     
                     self.plot_visited(cl_v[random_num], args[0][k])
                     self.plot_path(cl_p[random_num], path[k])
-
             else:
-                self.plot_visited("gray", args[0])
-                self.plot_path("red", path)
-
+                self.plot_visited(cl_v[random_num], args[0])
+                self.plot_path(cl_p[random_num], path)
         else:
-            self.plot_visited("gray", args[0], args[1])
-            self.plot_path("red", path)
+            self.plot_visited(cl_v[random_num], args[0], args[1])
+            self.plot_path(cl_p[random_num], path)
         
-        # ani = animation.ArtistAnimation(fig, self.ims, interval=100,
+        # ani = animation.ArtistAnimation(plt.gcf(), self.ims, interval=100,
         #                                     repeat_delay=1000, blit=True)
         # ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{gifname}.gif",
         #             writer="pillow")

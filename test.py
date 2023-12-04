@@ -1,4 +1,7 @@
 import numpy as np
 
-
-print)
+a = set()
+a.add(1)
+a.add(1)
+a.add(2)
+print(a)
