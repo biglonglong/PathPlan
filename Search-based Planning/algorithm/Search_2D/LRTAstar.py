@@ -1,12 +1,13 @@
 '''
-Learning_Real-time_Astar_Deeper (LRTA*-D):
+Learning_Real-time_Astar (LRTA*):
 Astar Comparison(real-time local-heuristic&path、N steps per-update): explore unknown dynamic-env, skipout local-optima, improve learning efficiency.
-Attention: suitable update_heuristic (a process of passing local-distant-env to neighbor by heuristic before extracting path, but only local-info considered at each N steps, so finding a globally optimal solution is difficult)
+Attention: suitable update_heuristic(a process of passing local-distant-env to neighbor by heuristic before extracting path, but only local-info considered at each N steps, so finding a globally optimal solution is difficult)
 '''
 
 import math
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -26,8 +27,8 @@ class lrtastar:
         self.open_set = [] 
         self.close_set = []
         self.explore_base = dict()
-        self.explore_tree = dict()
 
+        self.explore_tree = dict()
         self.visited = []
         self.path = []
 
@@ -207,7 +208,8 @@ def main():
     LRtastar = lrtastar(source, goal, N)
     plot = Plotting.plotting(source, goal)
     path, visited = LRtastar.searching()
-    plot.animation("Learning_Real-time_Astar_Deeper (LRTA*-D)", path, "LRTAstar_Deeper", visited)
+    plot.animation("Learning_Real-time_Astar (LRTA*)", path, "LRTAstar", visited)
+    plt.show()
 
 if __name__ == '__main__':
     main()

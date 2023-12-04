@@ -8,6 +8,7 @@ Attention: maintain consistency(cost_heuristic is usually designed not to overes
 import math
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -27,6 +28,7 @@ class astar:
         self.open_set = []
         self.close_set = []
         self.explore_base = dict()
+        
         self.explore_tree = dict()
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
@@ -124,6 +126,7 @@ def main():
     plot = Plotting.plotting(source, goal)
     path, visited = AStar.searching()
     plot.animation("A*", path, "Astar", visited)
+    plt.show()
 
 if __name__ == '__main__':
     main()

@@ -1,12 +1,13 @@
 '''
 Repeated_Astar:
 Astar Comparison(weighted heuristic): optimal first suboptimal second
-Attention: redundant caculation(depend on demand)
+Attention: redundant caculation(depend on demand between efficiency and optimality)
 '''
 
 import math
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -26,7 +27,10 @@ class repeated_astar:
         self.open_set = []
         self.close_set = []
         self.explore_base = dict()
+        
         self.explore_tree = dict()
+        self.visited = []
+        self.path = []
 
         self.var_epsilon = var_epsilon
 
@@ -92,8 +96,6 @@ class repeated_astar:
         return list(path)
 
     def searching(self):
-        path, visited = [], []
-
         while self.var_epsilon >= 1:
             self.open_set = []
             self.close_set = []
@@ -120,12 +122,12 @@ class repeated_astar:
                         self.explore_tree[neighbor] = explore_point
                         heapq.heappush(self.open_set, (self.cost_total(neighbor), neighbor))
 
-            path.append(self.extract_path())
-            visited.append(self.close_set)
+            self.path.append(self.extract_path())
+            self.visited.append(self.close_set)
 
             self.var_epsilon -= 0.5
 
-        return path, visited
+        return self.path, self.visited
 
 def main():
     source = (5, 5)
@@ -137,6 +139,7 @@ def main():
     plot = Plotting.plotting(source, goal)
     path, visited = REpeated_astar.searching()
     plot.animation("Repeated_Astar", path, "Repeated_Astar", visited)
+    plt.show()
 
 if __name__ == '__main__':
     main()

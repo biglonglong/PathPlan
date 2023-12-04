@@ -7,6 +7,7 @@ Best_first - for minest cost_heuristic:
 import math
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -26,6 +27,7 @@ class best_first:
         self.open_set = []
         self.close_set = []
         self.explore_base = dict()
+        
         self.explore_tree = dict()
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
@@ -120,6 +122,7 @@ def main():
     plot = Plotting.plotting(source, goal)
     path, visited = BEst_FIrst.searching()
     plot.animation("Best_First Searching", path, "Best_First", visited)
+    plt.show()
 
 if __name__ == '__main__':
     main()

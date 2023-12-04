@@ -7,6 +7,7 @@ Attention: low_var_epsilon_init、var_epsilon_step、improve_path_break_iteratio
 import math
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -27,8 +28,8 @@ class arastar:
         self.close_set = []
         self.incons_set = [] 
         self.explore_base = dict()
+        
         self.explore_tree = dict()
-
         self.visited = []
         self.path = []
 
@@ -102,6 +103,7 @@ class arastar:
         self.explore_base[self.source] = 0
         self.explore_base[self.goal] = math.inf
         self.explore_tree[self.source] = self.source
+
         heapq.heappush(self.open_set,
                        (self.cost_total(self.source), self.source))
 
@@ -186,7 +188,7 @@ def main():
     plot = Plotting.plotting(source, goal)
     path, visited = ARastar.searching()
     plot.animation("Anytime_Repairing_Astar (ARA*)", path, "ARAstar", visited)
-
+    plt.show()
 
 if __name__ == '__main__':
     main()

@@ -19,15 +19,13 @@ class DStar:
         self.s_start, self.s_goal = s_start, s_goal
 
         self.Env = env.Env()
-        self.Plot = plotting.Plotting(self.s_start, self.s_goal)
-
-        self.u_set = self.Env.motions
         self.obs = self.Env.obs
         self.x = self.Env.x_range
         self.y = self.Env.y_range
-
+        self.Plot = plotting.Plotting(self.s_start, self.s_goal)
         self.fig = plt.figure()
 
+        self.u_set = self.Env.motions
         self.OPEN = set()
         self.t = dict()
         self.PARENT = dict()
@@ -72,6 +70,7 @@ class DStar:
                 print("Add obstacle at: s =", x, ",", "y =", y)
                 self.obs.add((x, y))
                 self.Plot.update_obs(self.obs)
+
 
                 s = self.s_start
                 self.visited = set()
@@ -224,7 +223,7 @@ class DStar:
             k_min = self.process_state()
 
             if k_min >= self.h[s]:
-                break
+                break 
 
     def modify_cost(self, s):
         # if node in CLOSED set, put it into OPEN set.

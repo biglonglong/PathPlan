@@ -7,6 +7,7 @@ Dijkstra - for minest explore_base:
 import math
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -26,6 +27,7 @@ class dijkstra:
         self.open_set = []
         self.close_set = []
         self.explore_base = dict()
+        
         self.explore_tree = dict()
 
     def get_neighbor(self, point):
@@ -109,6 +111,7 @@ def main():
     plot = Plotting.plotting(source, goal)
     path, visited = DIjkstra.searching()
     plot.animation("Dijkstra", path, "Dijkstra", visited)
+    plt.show()
 
 if __name__ == '__main__':
     main()

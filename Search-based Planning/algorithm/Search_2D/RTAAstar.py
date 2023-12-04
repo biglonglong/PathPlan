@@ -1,5 +1,5 @@
 '''
-Real-time_Adaptive_Astar_Deeper (RTAA*-D):
+Real-time_Adaptive_Astar (RTAA*):
 LRTAstar Comparison(real-time local-optimal-goal): better global quality, less calculation.
 Attention: suitable extract_path_former、N(in update_local_goal, heuristic_updated is global, but local_goal is local, which makes extracting local-path is difficult[fallin local-eddies])
 '''
@@ -7,6 +7,7 @@ Attention: suitable extract_path_former、N(in update_local_goal, heuristic_upda
 import math
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -26,8 +27,8 @@ class rtaastar:
         self.open_set = [] 
         self.close_set = []
         self.explore_base = dict()
-        self.explore_tree = dict()
 
+        self.explore_tree = dict()
         self.visited = []
         self.path = []
 
@@ -202,7 +203,8 @@ def main():
     RTaastar = rtaastar(source, goal, N)
     plot = Plotting.plotting(source, goal)
     path, visited =RTaastar.searching()
-    plot.animation("Real-time_Adaptive_Astar_Deeper (RTAA*-D)", path, "RTAAstar_Deeper", visited)
+    plot.animation("Real-time_Adaptive_Astar (RTAA*)", path, "RTAAstar", visited)
+    plt.show()
 
 if __name__ == '__main__':
     main()

@@ -7,6 +7,7 @@ Attention: symmetric env & heuristic(difference of COST-source2goal and COST-goa
 import math
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -29,6 +30,7 @@ class bidirectional_astar:
         self.close_set_back = []
         self.explore_base_for = dict()
         self.explore_base_back = dict()
+        
         self.explore_tree_for = dict()
         self.explore_tree_back = dict()
 
@@ -163,6 +165,7 @@ def main():
     plot = Plotting.plotting(source, goal)
     path, visited_for, visited_back = BIdirectional_AStar.searching()
     plot.animation("Bidirectional_Astar", path, "Bidirectional_Astar", visited_for, visited_back)
+    plt.show()
 
 if __name__ == '__main__':
     main()
