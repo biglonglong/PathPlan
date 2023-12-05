@@ -39,7 +39,13 @@ class dfs:
         
         current_x,current_y,end_x,end_y = start[0],start[1],end[0],end[1]
         x_change = (end_x - current_x) / max(abs(end_x - current_x),1)
-        y_change = (end_y - current_y) / max(abs(end_y - current_y),1)       
+        y_change = (end_y - current_y) / max(abs(end_y - current_y),1)  
+
+        while(current_x != end_x and current_y != end_y):
+            current_x += x_change
+            current_y += y_change
+            if (current_x,current_y) in self.obs:
+                return True
 
         while(current_x != end_x):
             current_x += x_change
@@ -110,7 +116,8 @@ def main():
     DFs = dfs(source, goal)
     plot = Plotting.plotting(source, goal)
     path, visited = DFs.searching()
-    plot.animation("DFS", path, "DFS",  visited)
+    plot.animation("DFS", path, False, "DFS",  visited)
+    
     plt.show()
 
 if __name__ == '__main__':

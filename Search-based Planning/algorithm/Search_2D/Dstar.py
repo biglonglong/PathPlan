@@ -2,7 +2,7 @@
 Dstar - for minest cost_neighbor:
  plan by Dijkstra from goal to source, move by explore_tree with replan crossing path when facing new_obs in dynamic map.
  Defaults cost_neighbor(point, new_obs) is math.inf, process_state will spread the new_obs_info until find another exlore_tree_point.
-Attention: k as the comparsion of h for whether h is modified
+Attention: replan suboptimal path(replan break condition may modify point_path passed for the optimal path, witch make explore_tree error, whose origin is the break condition, so we can set a optimality based on cost_neighbor_interval)
 """
 
 import math
@@ -12,12 +12,14 @@ import matplotlib.pyplot as plt
 
 import os
 import sys
+import time
+import threading
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + r"\..\..")
 from map import Plotting
 from map import Env_Base
 
 class dstar:
-    def __init__(self, source, goal):
+    def __init__(self, source, goal, optimality):
         self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
@@ -32,7 +34,8 @@ class dstar:
         self.k = dict()         # minest_cost_goal
 
         self.explore_tree = dict()
-        self.path = []
+
+        self.optimality = optimality
 
     def get_neighbor(self, point):
         return [(point[0] + move[0], point[1] + move[1]) for move in self.motions]
@@ -43,7 +46,13 @@ class dstar:
         
         current_x,current_y,end_x,end_y = start[0],start[1],end[0],end[1]
         x_change = (end_x - current_x) / max(abs(end_x - current_x),1)
-        y_change = (end_y - current_y) / max(abs(end_y - current_y),1)       
+        y_change = (end_y - current_y) / max(abs(end_y - current_y),1)  
+
+        while(current_x != end_x and current_y != end_y):
+            current_x += x_change
+            current_y += y_change
+            if (current_x,current_y) in self.obs:
+                return True
 
         while(current_x != end_x):
             current_x += x_change
@@ -108,13 +117,41 @@ class dstar:
                     self.h[neighbor] = math.inf
                     self.k[neighbor] = math.inf
 
-                # condition1&2:dijkstra optima 
+                # close_neighbor finded & cost_neighbor(neighbor,ep) is OK, change ep path to close_neighbor
+                if mink_ep < self.h[ep]:
+                    if self.h[neighbor] <= mink_ep and self.h[ep] > self.h[neighbor] + self.cost_neighbor(neighbor, ep):
+                        self.explore_tree[ep] = neighbor
+                        self.h[ep] = self.h[neighbor] + self.cost_neighbor(neighbor, ep)
+
+                # condition2:dijkstra optima 
+                # condition3:cost_neighbor(stuck_point,obs) spread to h[stuck_point]
                 if mink_ep == self.h[ep]:
                     if (self.t[neighbor] == 'NEW') or \
-                        (self.explore_tree[neighbor] != ep and self.h[neighbor] > self.h[ep] + self.cost_neighbor(neighbor, ep)):
+                        (self.explore_tree[neighbor] != ep and self.h[neighbor] > self.h[ep] + self.cost_neighbor(neighbor, ep)) or \
+                        (self.explore_tree[neighbor] == ep and self.h[neighbor] != self.h[ep] + self.cost_neighbor(neighbor, ep)):
                         self.explore_tree[neighbor] = ep
                         self.insert(neighbor, self.h[ep] + self.cost_neighbor(neighbor, ep))
-     
+                
+                else:
+                    # condition2:cost_neighbor(stuck_point,stuck_point2) spread to h[stuck_point2]
+                    if (self.t[neighbor] == 'NEW') or \
+                        (self.explore_tree[neighbor] == ep and self.h[neighbor] != self.h[ep] + self.cost_neighbor(neighbor, ep)):
+                        self.explore_tree[neighbor] = ep
+                        self.insert(neighbor, self.h[ep] + self.cost_neighbor(neighbor, ep))
+                    
+                    # ep finded & cost_neighbor(neighbor,ep) is OK, change neighbor path to ep(dijkstra optima)
+                    elif self.explore_tree[neighbor] != ep and self.h[neighbor] > self.h[ep] + self.cost_neighbor(neighbor, ep):
+                        self.insert(ep, self.h[ep])
+                    
+                    # far_neighbor finded & cost_neighbor(neighbor,ep) is OK, change ep path to far_neighbor(dijkstra optima)
+                    elif self.explore_tree[neighbor] != ep and self.h[ep] > self.h[neighbor] + self.cost_neighbor(neighbor, ep) and self.t[neighbor] == 'CLOSED' and self.h[neighbor] > mink_ep:
+                        self.insert(neighbor, self.h[neighbor])
+                    
+                    else:
+                        pass
+
+        return self.open_set[0][0]
+
     def plan(self):
         self.t[self.goal] = 'NEW'
         self.insert(self.goal, 0)
@@ -124,10 +161,17 @@ class dstar:
             self.process_state()
             if self.t.get(self.source) == 'CLOSED':
                 break
-    
-        self.path = self.extract_path()
 
-        return self.path, self.closed_set
+        return self.extract_path(), self.closed_set
+
+    def replan(self, point_path):
+        if self.t[point_path] == 'CLOSED':
+            self.insert(self.explore_tree[point_path], self.h[self.explore_tree[point_path]]) 
+        
+        while True:
+            mink_ep = self.process_state()
+            if mink_ep >= self.h[point_path] + self.optimality:
+                break
 
     def on_press(self, event, plot):
         x, y = round(event.xdata), round(event.ydata)
@@ -136,94 +180,43 @@ class dstar:
         else:
             if (x, y) not in self.obs:
                 self.obs.add((x, y))
-                plot.update_obs(self.obs)
-                plot.animation("D*", self.path, "Dstar", self.closed_set)
-                
-                plt.gcf().canvas.draw_idle()
+                plot.update_obs_dynamic((x, y))
                 print("add obstacle at: ", (x, y))
-                
 
+                start_time = time.time()
+                path = [self.source]
+
+                point_path = self.source
+                while point_path !=self.goal:
+                    if time.time() - start_time > 5.0:
+                        print("replan timeout! (may be difficult to find a path)")
+                        plt.close('all')
+                        os._exit(0)
+
+                    if self.is_collision(point_path, self.explore_tree[point_path]):
+                        thread = threading.Thread(target=self.replan, args=(point_path,))
+                        thread.start()
+                    else:
+                        point_path = self.explore_tree[point_path]
+                        path.append(point_path)
+
+                plot.animation("D*", path, False, "Dstar", [])
+                plt.gcf().canvas.draw_idle()
+                
 def main():
     source = (5, 5)
     goal = (45, 25)
 
-    DStar = dstar(source, goal)
+    # speed replan break condition, such as optimality = -1.5
+    optimality = 0
+
+    DStar = dstar(source, goal, optimality)
     plot = Plotting.plotting(source, goal)
     path, visited = DStar.plan()
-    plot.animation("D*", path, "Dstar", visited)
+    plot.animation("D*", path, False, "Dstar", visited)
 
     plt.gcf().canvas.mpl_connect('button_press_event',  lambda event: DStar.on_press(event, plot=plot))
     plt.show()
 
 if __name__ == '__main__':
     main()
-
-    # def on_press(self, event):
-    #     x, y = event.xdata, event.ydata
-    #     if x < 0 or x > self.x - 1 or y < 0 or y > self.y - 1:
-    #         print("Please choose right area!")
-    #     else:
-    #         x, y = int(x), int(y)
-    #         if (x, y) not in self.obs:
-    #             print("Add obstacle at: s =", x, ",", "y =", y)
-    #             self.obs.add((x, y))
-    #             self.Plot.update_obs(self.obs)
-
-    #             s = self.s_start
-    #             self.visited = set()
-    #             self.count += 1
-
-    #             while s != self.s_goal:
-    #                 if self.is_collision(s, self.PARENT[s]):
-    #                     self.modify(s)
-    #                     continue
-    #                 s = self.PARENT[s]
-
-    #             self.path = self.extract_path(self.s_start, self.s_goal)
-
-    #             plt.cla()
-    #             self.Plot.plot_grid("Dynamic A* (D*)")
-    #             self.plot_visited(self.visited)
-    #             self.plot_path(self.path)
-
-    #         self.fig.canvas.draw_idle()
-
-    # def modify(self, s):
-    #     """
-    #     start processing from state s.
-    #     :param s: is a node whose status is RAISE or LOWER.
-    #     """
-
-    #     self.modify_cost(s)
-
-    #     while True:
-    #         k_min = self.process_state()
-
-    #         if k_min >= self.h[s]:
-    #             break 
-
-    # def modify_cost(self, s):
-    #     # if node in CLOSED set, put it into OPEN set.
-    #     # Since cost may be changed between s - s.parent, calc cost(s, s.p) again
-
-    #     if self.t[s] == 'CLOSED':
-    #         self.insert(s, self.h[self.PARENT[s]] + self.cost(s, self.PARENT[s]))
-
-
-    # def plot_path(self, path):
-    #     px = [x[0] for x in path]
-    #     py = [x[1] for x in path]
-    #     plt.plot(px, py, linewidth=2)
-    #     plt.plot(self.s_start[0], self.s_start[1], "bs")
-    #     plt.plot(self.s_goal[0], self.s_goal[1], "gs")
-
-    # def plot_visited(self, visited):
-    #     color = ['gainsboro', 'lightgray', 'silver', 'darkgray',
-    #              'bisque', 'navajowhite', 'moccasin', 'wheat',
-    #              'powderblue', 'skyblue', 'lightskyblue', 'cornflowerblue']
-
-    #     if self.count >= len(color) - 1:
-    #         self.count = 0
-
-    #     for x in visited:
-    #         plt.plot(x[0], x[1], marker='s', color=color[self.count])

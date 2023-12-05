@@ -9,20 +9,30 @@ class plotting:
         self.source, self.goal = source, goal
         self.env = Env_Base.env()
         self.obs = self.env.obs
+        self.obs_dynamic = set()
+
         self.ims = [[]]
         
-    def update_obs(self, obs):
-        self.obs = obs
+    def update_obs_dynamic(self, obs_dynamic):
+        self.obs_dynamic.add(obs_dynamic)
 
     def plot_env(self, name):
-        obs_x = [obs[0] for obs in self.obs]
-        obs_y = [obs[1] for obs in self.obs]
+        base_obs_x = [obs[0] for obs in self.env.obs]
+        base_obs_y = [obs[1] for obs in self.env.obs]
 
         plt.title(name)
         plt.axis("equal")
+
         plt.plot(self.source[0], self.source[1], color="blue", marker="s")
         plt.plot(self.goal[0], self.goal[1], color="green", marker="s")
-        plt.plot(obs_x, obs_y, "ks")
+        plt.plot(base_obs_x, base_obs_y, "ks")
+
+        dynamic_obs_x = [obs[0] for obs in self.obs_dynamic]
+        dynamic_obs_y = [obs[1] for obs in self.obs_dynamic]
+
+        plot_obs = plt.plot(dynamic_obs_x, dynamic_obs_y, "ks")
+        self.ims.append(self.ims[-1] + plot_obs)
+        plt.pause(1.0)
 
     def plot_visited(self, color_visited, *args):
         if self.source in args[0]:
@@ -43,6 +53,7 @@ class plotting:
                 if count % length == 0 or count == len(args[0]):
                     self.ims.append(self.ims[-1] + plot_explore_points)
                     plt.pause(0.01)
+                    
         else:
             if self.source in args[1]:
                 args[1].remove(self.source)
@@ -68,11 +79,11 @@ class plotting:
         path_x = [path[i][0] for i in range(len(path))]
         path_y = [path[i][1] for i in range(len(path))]
         
-        plot_route = plt.plot(path_x, path_y, color=color_path, linewidth='3')
+        plot_route = plt.plot(path_x, path_y, color=color_path, linewidth='2')
         self.ims.append(self.ims[-1] + plot_route)
         plt.pause(1.0)
 
-    def animation(self, name, path, gifname="test", *args):
+    def animation(self, name, path, button = True, file="test", *args):
         plt.gcf().canvas.mpl_connect('key_release_event',
                         lambda event: [exit(0) if event.key == 'escape' else None])
         
@@ -81,24 +92,26 @@ class plotting:
         cl_v, cl_p = self.color_list()
         random_num = np.random.randint(0,len(cl_v))
 
-        if len(args) == 1:
-            if type(args[0][0]) == list:
-                for k in range(len(path)):
-                    random_num = np.random.randint(0,len(cl_v))
-                    
-                    self.plot_visited(cl_v[random_num], args[0][k])
-                    self.plot_path(cl_p[random_num], path[k])
-            else:
-                self.plot_visited(cl_v[random_num], args[0])
-                self.plot_path(cl_p[random_num], path)
-        else:
+        if len(args) == 2:
             self.plot_visited(cl_v[random_num], args[0], args[1])
             self.plot_path(cl_p[random_num], path)
+
+        elif len(args) == 1 and len(args[0]) != 0 and isinstance(args[0][0], list):
+            for k in range(len(path)):
+                random_num = np.random.randint(0,len(cl_v))
+                
+                self.plot_visited(cl_v[random_num], args[0][k])
+                self.plot_path(cl_p[random_num], path[k])    
+
+        else:
+            self.plot_visited(cl_v[random_num], args[0])
+            self.plot_path(cl_p[random_num], path)     
         
-        # ani = animation.ArtistAnimation(plt.gcf(), self.ims, interval=100,
-        #                                     repeat_delay=1000, blit=True)
-        # ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{gifname}.gif",
-        #             writer="pillow")
+        if button:
+            ani = animation.ArtistAnimation(plt.gcf(), self.ims, interval=100,
+                                                repeat_delay=1000, blit=True)
+            ani.save(os.path.dirname(os.path.abspath(__file__)) + rf"\gif\{file}.gif",
+                        writer="pillow")
         
     @staticmethod
     def color_list():
