@@ -1,6 +1,6 @@
 '''
 Learning_Real-time_Astar (LRTA*):
-Astar Comparison(real-time local-heuristic&path、N steps per-update): explore unknown dynamic-env, skipout local-optima, improve learning efficiency.
+Astar Comparison(real-time local-heuristic&path、N steps per-update): explore unknown env, skipout local-optima, improve learning efficiency.
 Attention: suitable update_heuristic(a process of passing local-distant-env to neighbor by heuristic before extracting path, but only local-info considered at each N steps, so finding a globally optimal solution is difficult)
 '''
 

@@ -2,7 +2,7 @@
 Dstar - for minest cost_neighbor:
  plan by Dijkstra from goal to source, move by explore_tree with replan crossing path when facing new_obs in dynamic map.
  Defaults cost_neighbor(point, new_obs) is math.inf, process_state will spread the new_obs_info until find another exlore_tree_point.
-Attention: replan suboptimal path(replan break condition may modify point_path passed for the optimal path, witch make explore_tree error, whose origin is the break condition, so we can set a optimality based on cost_neighbor_interval)
+Attention: facing obs, replan suboptimal path(replan break condition may modify point_path passed for the optimal path, witch make explore_tree error, whose origin is the break condition, so we can set a optimality based on cost_neighbor_interval)
 """
 
 import math

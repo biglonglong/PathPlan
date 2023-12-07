@@ -1,7 +1,7 @@
 '''
 Anytime_Repairing_Astar (ARA*): 
 Astar Comparison(weighted heuristic、incons): fasten searching suboptimal path, optimize suboptimal path.
-Attention: low_var_epsilon_init、var_epsilon_step、improve_path_break_iteration、fair cost(weighted heuristic, which makes points-near-source have larger cost_total comparing points-near-goal, lead to over-optimize points-near-goal)
+Attention: low_var_epsilon_init、var_epsilon_step、improve_path_break_iteration、fair cost(weighted heuristic, which makes points-near-source have larger cost_total comparing points-near-goal, leading to over-optimize points-near-goal)
 '''
 
 import math

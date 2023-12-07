@@ -2,7 +2,7 @@
 Astar - for minest cost_total:
  cost_heuristic&explore_base to guide, combine explore_base(inconsistent) from cost_neighbor of get_neighbor.
  Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in minest-cost-order.
-Attention: maintain consistency(cost_heuristic is usually designed not to overestimate actual costs)
+Attention: maintain consistency(cost_heuristic(s) <= cost_heuristic(s') + cost_neighbor(s,s') --> cost_total(s) <cost_total(s') for s' optimality[s to s' finded in open_set] from local optimality to goal optimality)
 '''
 
 import math

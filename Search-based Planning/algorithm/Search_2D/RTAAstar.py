@@ -1,7 +1,7 @@
 '''
 Real-time_Adaptive_Astar (RTAA*):
 LRTAstar Comparison(real-time local-optimal-goal): better global quality, less calculation.
-Attention: suitable extract_path_former、N(in update_local_goal, heuristic_updated is global, but local_goal is local, which makes extracting local-path is difficult[fallin local-eddies])
+Attention: suitable N、movements(in update_local_goal, heuristic_updated is global, but local_goal is local, which makes extracting local-path is difficult[fallin local-eddies])
 '''
 
 import math
@@ -16,7 +16,7 @@ from map import Plotting
 from map import Env_Base
 
 class rtaastar:
-    def __init__(self, source, goal, N):
+    def __init__(self, source, goal, N, movements):
         self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
@@ -34,6 +34,7 @@ class rtaastar:
 
         self.table_heuristic = dict()
         self.N = N
+        self.movements = movements
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
         if point in self.obs:
@@ -92,22 +93,21 @@ class rtaastar:
     def extract_path_former(self, local_source, local_goal):
         path = [local_source]
         point_path = local_source
-        explored = [local_source]
-        
-        while True:
+        movements = self.movements
+
+        while movements:
             heuristic_neighbor = dict()
             for neighbor in self.get_neighbor(point_path):
-                if neighbor not in explored:
-                    heuristic_neighbor[neighbor] = self.table_heuristic[neighbor]
+                heuristic_neighbor[neighbor] = self.table_heuristic[neighbor]
     
             point_path = min(heuristic_neighbor, key=heuristic_neighbor.get)
             path.append(point_path)
-            explored.append(point_path)
+            movements-=1
 
             if point_path == local_goal:
                 break
 
-        return list(path)
+        return point_path, list(path)
 
     def extract_path_final(self, local_source):
         path = [self.goal]
@@ -193,8 +193,8 @@ class rtaastar:
                     for point_heuristic in heuristic_updated:
                         self.table_heuristic[point_heuristic] = heuristic_updated[point_heuristic]
 
-                    local_path = self.extract_path_former(local_source, local_goal)
-                    local_source = local_goal
+                    local_arrival, local_path = self.extract_path_former(local_source, local_goal)
+                    local_source = local_arrival
                     self.path.append(local_path)
                     self.visited.append(self.close_set)
                     break
@@ -206,7 +206,10 @@ def main():
     # sigle-step real-time interval
     N = 240
 
-    RTaastar = rtaastar(source, goal, N)
+    # sigle-step extracting points
+    movements = 20
+
+    RTaastar = rtaastar(source, goal, N, movements)
     plot = Plotting.plotting(source, goal)
     path, visited =RTaastar.searching()
     plot.animation("Real-time_Adaptive_Astar (RTAA*)", path, False, "RTAAstar", visited)
