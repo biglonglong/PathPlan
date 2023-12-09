@@ -1,9 +1,9 @@
-"""
-Dstar - for minest cost_neighbor:
- plan by Dijkstra from goal to source, move by explore_tree with replan crossing path when facing new_obs in dynamic map.
- Defaults cost_neighbor(point, new_obs) is math.inf, process_state will spread the new_obs_info until find another exlore_tree_point.
-Attention: facing obs, replan suboptimal path(replan break condition may modify point_path passed for the optimal path, witch make explore_tree error, whose origin is the break condition, so we can set a optimality based on cost_neighbor_interval)
-"""
+# """
+# Dstar - spread obs(math.inf) and dijkstra optima:
+#  plan by dijkstra from goal to source, move by explore_tree with replan crossing path when facing new_obs in dynamic map[former-spread block, change ep to close_neighbor].
+#  Defaults cost_neighbor(point, new_obs) is math.inf, process_state will spread the new_obs_info until find another explore_tree_point.
+# Attention: former search
+# """
 
 import math
 import heapq
@@ -19,7 +19,7 @@ from map import Plotting
 from map import Env_Base
 
 class dstar:
-    def __init__(self, source, goal, optimality):
+    def __init__(self, source, goal):
         self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
@@ -34,8 +34,6 @@ class dstar:
         self.k = dict()         # minest_cost_goal
 
         self.explore_tree = dict()
-
-        self.optimality = optimality
 
     def get_neighbor(self, point):
         return [(point[0] + move[0], point[1] + move[1]) for move in self.motions]
@@ -96,7 +94,7 @@ class dstar:
         elif self.t[point] == 'OPEN':
             self.k[point] = min(self.k[point], new_h)
         else:
-            self.k[point] = min(self.h[point], new_h)   # update k as h after obs-path-update
+            self.k[point] = min(self.h[point], new_h)
 
         self.h[point] = new_h
 
@@ -117,7 +115,7 @@ class dstar:
                     self.h[neighbor] = math.inf
                     self.k[neighbor] = math.inf
 
-                # close_neighbor finded & cost_neighbor(neighbor,ep) is OK, change ep path to close_neighbor
+                # close_neighbor finded & more-optimal path, change ep path to close_neighbor
                 if mink_ep < self.h[ep]:
                     if self.h[neighbor] <= mink_ep and self.h[ep] > self.h[neighbor] + self.cost_neighbor(neighbor, ep):
                         self.explore_tree[ep] = neighbor
@@ -139,11 +137,11 @@ class dstar:
                         self.explore_tree[neighbor] = ep
                         self.insert(neighbor, self.h[ep] + self.cost_neighbor(neighbor, ep))
                     
-                    # ep finded & cost_neighbor(neighbor,ep) is OK, change neighbor path to ep(dijkstra optima)
+                    # ep find more-optimal path, change neighbor path to ep(dijkstra optima)
                     elif self.explore_tree[neighbor] != ep and self.h[neighbor] > self.h[ep] + self.cost_neighbor(neighbor, ep):
                         self.insert(ep, self.h[ep])
                     
-                    # far_neighbor finded & cost_neighbor(neighbor,ep) is OK, change ep path to far_neighbor(dijkstra optima)
+                    # far_neighbor find more-optimal path, change ep path to far_neighbor(dijkstra optima)
                     elif self.explore_tree[neighbor] != ep and self.h[ep] > self.h[neighbor] + self.cost_neighbor(neighbor, ep) and self.t[neighbor] == 'CLOSED' and self.h[neighbor] > mink_ep:
                         self.insert(neighbor, self.h[neighbor])
                     
@@ -170,10 +168,39 @@ class dstar:
         
         while True:
             mink_ep = self.process_state()
-            if mink_ep >= self.h[point_path] + self.optimality:
+
+            # update until h[point_path] is optimal
+            if mink_ep >= self.h[point_path]:
                 break
 
+            if len(self.open_set) == 0:
+                print("replan error!")
+
     def on_press(self, event, plot):
+        x, y = round(event.xdata), round(event.ydata)
+        if x < 0 or x > self.env.x_range - 1 or y < 0 or y > self.env.y_range - 1:
+            print("error area!")
+        else:
+            if (x, y) not in self.obs:
+                self.obs.add((x, y))
+                plot.update_obs_dynamic((x, y))
+                print("add obstacle at: ", (x, y))
+
+                path = [self.source]
+
+                point_path = self.source
+                while point_path !=self.goal:
+
+                    if self.is_collision(point_path, self.explore_tree[point_path]):
+                        self.replan(point_path)
+                    else:
+                        point_path = self.explore_tree[point_path]
+                        path.append(point_path)
+
+                plot.animation("D*", path, False, "Dstar", [])
+                plt.gcf().canvas.draw_idle()
+
+    def on_press_time(self, event, plot):
         x, y = round(event.xdata), round(event.ydata)
         if x < 0 or x > self.env.x_range - 1 or y < 0 or y > self.env.y_range - 1:
             print("error area!")
@@ -202,15 +229,12 @@ class dstar:
 
                 plot.animation("D*", path, False, "Dstar", [])
                 plt.gcf().canvas.draw_idle()
-                
+
 def main():
     source = (5, 5)
     goal = (45, 25)
 
-    # speed replan break condition, such as optimality = -1.5
-    optimality = 0
-
-    DStar = dstar(source, goal, optimality)
+    DStar = dstar(source, goal)
     plot = Plotting.plotting(source, goal)
     path, visited = DStar.plan()
     plot.animation("D*", path, False, "Dstar", visited)

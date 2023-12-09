@@ -163,6 +163,7 @@ class arastar:
         self.path.append(self.extract_path())
 
         while self.update_var_epsilon() > 1:
+
             self.var_epsilon -= self.var_epsilon_step
 
             for point in self.incons_set:

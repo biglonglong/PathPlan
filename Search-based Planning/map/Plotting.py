@@ -14,7 +14,10 @@ class plotting:
         self.ims = [[]]
         
     def update_obs_dynamic(self, obs_dynamic):
-        self.obs_dynamic.add(obs_dynamic)
+        if obs_dynamic not in self.obs_dynamic:
+            self.obs_dynamic.add(obs_dynamic)
+        else:
+            self.obs_dynamic.remove(obs_dynamic)
 
     def plot_env(self, name):
         base_obs_x = [obs[0] for obs in self.env.obs]

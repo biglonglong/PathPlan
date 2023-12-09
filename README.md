@@ -5,13 +5,11 @@ Path planning means that the robot automatically plans a path from the starting 
 
 This repository implements some common path planning algorithms used in robotics, including global path planning based on a priori complete information and local path planning based on sensor information. We designed animation for each algorithm to display the running process. 
 
-In addition, the project is based on [zhm-real/PathPlanning](https://github.com/zhm-real/PathPlanning) secondary organization, if there is any infringement, please contact the author, welcome to the big shot guidance. 
+In addition, the project is based on [**zhm-real/PathPlanning**](https://github.com/zhm-real/PathPlanning) secondary organization, if there is any infringement, please contact the author, welcome to the big shot guidance. 
 
 [TOC]
 
 
-
-# Global Path Planning
 
 ## Search-based Planning
 
@@ -80,7 +78,7 @@ particle swarm algorithm ()
 
 ## Reinforcement Learning
 
-# Local Path Planning
+
 
 
 
@@ -93,9 +91,9 @@ particle swarm algorithm ()
 - [A*: ](https://ieeexplore.ieee.org/document/4082128)A Formal Basis for the heuristic Determination of Minimum Cost Paths
 - [Learning Real-Time A*: ](https://arxiv.org/pdf/1110.4076.pdf)Learning in Real-Time Search: A Unifying Framework
 - [Real-Time Adaptive A*: ](http://idm-lab.org/bib/abstracts/papers/aamas06.pdf)Real-Time Adaptive A*
-- [Lifelong Planning A*: ](https://www.cs.cmu.edu/~maxim/files/aij04.pdf)Lifelong Planning A*
 - [Anytime Repairing A*: ](https://papers.nips.cc/paper/2382-ara-anytime-a-with-provable-bounds-on-sub-optimality.pdf)ARA*: Anytime A* with Provable Bounds on Sub-Optimality
 - [D*: ](http://web.mit.edu/16.412j/www/html/papers/original_dstar_icra94.pdf)Optimal and Efficient Path Planning for Partially-Known Environments
+- 
 - [D* Lite: ](http://idm-lab.org/bib/abstracts/papers/aaai02b.pdf)D* Lite
 - [Field D*: ](http://robots.stanford.edu/isrr-papers/draft/stentz.pdf)Field D*: An Interpolation-based Path Planner and Replanner
 - [Anytime D*: ](http://www.cs.cmu.edu/~ggordon/likhachev-etal.anytime-dstar.pdf)Anytime Dynamic A*: An Anytime, Replanning Algorithm

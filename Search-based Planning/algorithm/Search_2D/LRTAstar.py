@@ -192,7 +192,7 @@ class lrtastar:
                         self.explore_base[neighbor] = new_cost
                         self.explore_tree[neighbor] = explore_point
                         heapq.heappush(self.open_set, (self.cost_total(neighbor), neighbor))
-                
+
                 if count == self.N:
                     heuristic_updated = self.update_heuristic()
                     for point_heuristic in heuristic_updated:
