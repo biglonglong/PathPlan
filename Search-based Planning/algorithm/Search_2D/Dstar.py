@@ -6,7 +6,7 @@ D*: plan by dijkstra from goal to source, move by explore_tree and if is_collisi
             (1) process_state: former spread the new_obs_info along old_path, and find suitable neighbor as the path exits
             (2) mistaken exit: caused by historcal obs which didn't bolck historical path, one solution is serveral replan with path recorder, other solution is insert_obs every on_press
             (3) point_path: latter replan will modify explore_tree of former replan's points, path recorder need be in time
-            (4) neighbor far or close: may be for speeding optimization, result may be not optimal
+            (4) neighbor far or close: may be for speeding optimization, result may be not optimal and only for obs add
             (5) more debug, more comprehension
         3. break condition(mink_ep >= h[collision_point] prove that collision_point path is optimal)
 '''
@@ -170,10 +170,6 @@ class dstar:
         return self.extract_path(), self.closed_set
 
     def replan(self, point_path):
-        # # solution 1 
-        # if self.t[point_path] == 'CLOSED':
-        #     self.insert(self.explore_tree[point_path], self.h[self.explore_tree[point_path]]) 
-        
         while True:
             mink_ep = self.process_state()
 
@@ -181,9 +177,8 @@ class dstar:
                 break
 
             if len(self.open_set) == 0:
-                print("replan error!")
-                plt.close('all')
-                os._exit(0)
+                print("no path finded until no point explored")
+                sys.exit(0)
 
     def on_press(self, event, plot):
         x, y = round(event.xdata), round(event.ydata)
@@ -195,54 +190,29 @@ class dstar:
                 plot.update_obs_dynamic((x, y))
                 print("add obstacle at: ", (x, y))
 
-                # solution 2
+                # solution 2: limited sacle obs spread
                 self.insert((x, y), math.inf)
                 self.explore_tree[(x, y)] = None
                 self.process_state()
 
                 path = [self.source]
-
                 point_path = self.source
-                while point_path !=self.goal:
 
-                    if self.is_collision(point_path, self.explore_tree[point_path]):
-                        self.replan(point_path)
-                    else:
-                        point_path = self.explore_tree[point_path]
-                        path.append(point_path)
-
-                plot.animation("D*", path, False, "Dstar", [])
-                plt.gcf().canvas.draw_idle()
-
-    def on_press_time(self, event, plot):
-        import time
-        import threading
-
-        x, y = round(event.xdata), round(event.ydata)
-        if x < 0 or x > self.env.x_range - 1 or y < 0 or y > self.env.y_range - 1:
-            print("error area!")
-        else:
-            if (x, y) not in self.obs:
-                self.obs.add((x, y))
-                plot.update_obs_dynamic((x, y))
-                print("add obstacle at: ", (x, y))
-
-                start_time = time.time()
-                path = [self.source]
-
-                point_path = self.source
-                while point_path !=self.goal:
-                    if time.time() - start_time > 5.0:
-                        print("replan timeout!")
-                        plt.close('all')
-                        os._exit(0)
-
-                    if self.is_collision(point_path, self.explore_tree[point_path]):
-                        thread = threading.Thread(target=self.replan, args=(point_path,))
-                        thread.start()
-                    else:
-                        point_path = self.explore_tree[point_path]
-                        path.append(point_path)
+                try:
+                    while point_path !=self.goal:
+                        if self.is_collision(point_path, self.explore_tree[point_path]):
+                            
+                            # # solution 1: blocked point obs explore
+                            # if self.t[point_path] == 'CLOSED':
+                            #     self.insert(point_path, self.h[self.explore_tree[point_path]] + self.cost_neighbor(point_path, self.explore_tree[point_path])) 
+   
+                            self.replan(point_path)
+                        else:
+                            point_path = self.explore_tree[point_path]
+                            path.append(point_path)
+                except KeyError as e:
+                    print(f"no path finded until explore {e}")
+                    sys.exit(0)
 
                 plot.animation("D*", path, False, "Dstar", [])
                 plt.gcf().canvas.draw_idle()

@@ -16,10 +16,8 @@ class plotting:
     def update_obs_dynamic(self, obs_dynamic):
         if obs_dynamic not in self.obs_dynamic:
             self.obs_dynamic.add(obs_dynamic)
-            plot_obs_dynamic = plt.plot(obs_dynamic[0], obs_dynamic[1], "ks")
         else:
             self.obs_dynamic.remove(obs_dynamic)
-            plot_obs_dynamic = plt.plot(obs_dynamic[0], obs_dynamic[1], color="white", marker="s")
 
     def plot_env(self, name):
         base_obs_x = [obs[0] for obs in self.env.obs]
@@ -31,6 +29,12 @@ class plotting:
         plt.plot(self.source[0], self.source[1], color="blue", marker="s")
         plt.plot(self.goal[0], self.goal[1], color="green", marker="s")
         plt.plot(base_obs_x, base_obs_y, "ks")
+
+        dynamic_obs_x = [obs[0] for obs in self.obs_dynamic]
+        dynamic_obs_y = [obs[1] for obs in self.obs_dynamic]
+
+        plot_obs = plt.plot(dynamic_obs_x, dynamic_obs_y, "ks")
+        self.ims.append(self.ims[-1] + plot_obs)
         plt.pause(1.0)
 
     def plot_visited(self, color_visited, *args):
