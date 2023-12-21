@@ -1,8 +1,7 @@
 '''
-Astar - for minest cost_total:
- cost_heuristic&explore_base to guide, combine explore_base(inconsistent) from cost_neighbor of get_neighbor.
- Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in minest-cost-order.
-Attention: maintain consistency(cost_heuristic(s) <= cost_heuristic(s') + cost_neighbor(s,s') --> cost_total(s) <cost_total(s') for s' optimality[s to s' finded in open_set] from local optimality to goal optimality)
+A*: minest explore_base+cost_heuristic to explore neighbors with new_cost, which check whether to optima neighbor's explore_tree and explore_base, until find the goal
+    Attention: 
+        1. maintain consistency(cost_heuristic(s) <= cost_heuristic(s') + cost_neighbor(s,s') -> cost_total(s) <cost_total(s') to guarantee s' is optimal when s' heapqpoped)
 '''
 
 import math
@@ -98,12 +97,18 @@ class astar:
         
         return list(path)
 
-    def searching(self):
+    def torrent(self):
+        for i in range(self.env.x_range):
+            for j in range(self.env.y_range):
+                self.explore_base[(i, j)] = math.inf
+                self.explore_tree[(i, j)] = None
+
         self.explore_base[self.source] = 0
         self.explore_tree[self.source] = self.source
-        
-        heapq.heappush(self.open_set,
-                       (self.cost_total(self.source), self.source))
+        heapq.heappush(self.open_set, (self.cost_total(self.source), self.source))
+
+    def searching(self):
+        self.torrent()
 
         while self.open_set:
             _, explore_point = heapq.heappop(self.open_set)
@@ -115,8 +120,6 @@ class astar:
             for neighbor in self.get_neighbor(explore_point):
                 new_cost = self.explore_base[explore_point] + self.cost_neighbor(explore_point, neighbor)
 
-                if neighbor not in self.explore_base:
-                    self.explore_base[neighbor] = math.inf
                 if new_cost < self.explore_base[neighbor]:
                     self.explore_base[neighbor] = new_cost
                     self.explore_tree[neighbor] = explore_point

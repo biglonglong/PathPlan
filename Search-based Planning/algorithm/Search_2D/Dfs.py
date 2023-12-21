@@ -1,7 +1,5 @@
 '''
-DFS - one of all explored path:
- explored all neighbor until find the goal, combine explore_base(inconsistent) from cost_neighbor of get_neighbor.
- Defaults unexplored explore_base to None, exploring to math.inf(obs), explore in depth-first-order.
+DFS: depth first to explore neighbors with new_cost, which check whether to optima neighbor's explore_tree and explore_base, until find the goal
 '''
 
 import math
@@ -83,11 +81,18 @@ class dfs:
         
         return list(path)
 
-    def searching(self):
+    def torrent(self):
+        for i in range(self.env.x_range):
+            for j in range(self.env.y_range):
+                self.explore_base[(i, j)] = math.inf
+                self.explore_tree[(i, j)] = None
+
         self.explore_base[self.source] = 0
         self.explore_tree[self.source] = self.source
+        heapq.heappush(self.open_set, (0, self.source))
 
-        heapq.heappush(self.open_set,(0, self.source))
+    def searching(self):
+        self.torrent()
 
         while self.open_set:
             _, explore_point  = heapq.heappop(self.open_set)
@@ -99,8 +104,6 @@ class dfs:
             for neighbor in self.get_neighbor(explore_point):
                 new_cost = self.explore_base[explore_point] + self.cost_neighbor(explore_point, neighbor)
 
-                if neighbor not in self.explore_base:
-                    self.explore_base[neighbor] = math.inf
                 if new_cost < self.explore_base[neighbor]:
                     self.explore_base[neighbor] = new_cost
                     self.explore_tree[neighbor] = explore_point
@@ -116,7 +119,7 @@ def main():
     DFs = dfs(source, goal)
     plot = Plotting.plotting(source, goal)
     path, visited = DFs.searching()
-    plot.animation("DFS", path, False, "DFS",  visited)
+    plot.animation("DFS", path, False, "Dfs",  visited)
     
     plt.show()
 

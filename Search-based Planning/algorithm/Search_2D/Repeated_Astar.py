@@ -1,7 +1,7 @@
 '''
-Repeated_Astar:
-Astar Comparison(weighted heuristic): optimal first suboptimal second
-Attention: redundant caculation(depend on demand between efficiency and optimality)
+Repeated_Astar: loop weighted cost_heuristic A*search, until var_epsilon < 1 --> suboptimal first optimal second
+    Attention: 
+        1. balance path search-speed and quality(repeat A* calculations with decreasing var_epsilon)
 '''
 
 import math
@@ -101,16 +101,22 @@ class repeated_astar:
         
         return list(path)
 
+    def torrent(self):
+        for i in range(self.env.x_range):
+            for j in range(self.env.y_range):
+                self.explore_base[(i, j)] = math.inf
+                self.explore_tree[(i, j)] = None
+
+        self.open_set = []
+        self.close_set = []
+        self.explore_base[self.source] = 0
+        self.explore_tree[self.source] = self.source
+        heapq.heappush(self.open_set, (self.cost_total(self.source), self.source))
+
     def searching(self):
         while self.var_epsilon >= 1:
-            self.open_set = []
-            self.close_set = []
-            self.explore_base = {self.source: 0}
-            self.explore_tree = {self.source: self.source}
+            self.torrent()
             
-            heapq.heappush(self.open_set,
-                        (self.cost_total(self.source), self.source))
-
             while self.open_set:
                 _, explore_point = heapq.heappop(self.open_set)
                 self.close_set.append(explore_point)
@@ -121,8 +127,6 @@ class repeated_astar:
                 for neighbor in self.get_neighbor(explore_point):
                     new_cost = self.explore_base[explore_point] + self.cost_neighbor(explore_point, neighbor)
 
-                    if neighbor not in self.explore_base:
-                        self.explore_base[neighbor] = math.inf
                     if new_cost < self.explore_base[neighbor]:
                         self.explore_base[neighbor] = new_cost
                         self.explore_tree[neighbor] = explore_point
@@ -139,6 +143,7 @@ def main():
     source = (5, 5)
     goal = (45, 25)
 
+    # search-speed and quality trade-off param
     var_epsilon = 2.5
 
     REpeated_astar = repeated_astar(source, goal, var_epsilon)

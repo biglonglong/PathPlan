@@ -1,7 +1,7 @@
 '''
-Bidirectional_Astar: 
-Astar Comparison(bi-direction): half time-complexity
-Attention: symmetric env & heuristic(difference of COST-source2goal and COST-goal2source leads to nofind best path because regard point_meet as goal)
+Bidirectional_Astar: bi-direction A*search, until explore_tree connected --> half time-complexity
+    Attention: 
+        1. suit symmetrical env and cost_heuristic(asymmetrical env and cost_heuristic can lead the point_meet isn't the best path for the whole bi-half-env)
 '''
 
 import math
@@ -92,9 +92,6 @@ class bidirectional_astar:
             return x_dis + y_dis
 
     def extract_path(self, point_meet):
-        if point_meet == self.source:
-            exit("No path found.")
-
         path_for = [point_meet]
         point_path_for = point_meet
         while True:
@@ -115,30 +112,36 @@ class bidirectional_astar:
         
         return list(reversed(path_for)) + list(path_back)
 
-    def searching(self):
+    def torrent(self):
+        for i in range(self.env.x_range):
+            for j in range(self.env.y_range):
+                self.explore_base_for[(i, j)] = math.inf
+                self.explore_tree_for[(i, j)] = None
+                self.explore_base_back[(i, j)] = math.inf
+                self.explore_tree_back[(i, j)] = None
+        
         self.explore_base_for[self.source] = 0
         self.explore_tree_for[self.source] = self.source
         self.explore_base_back[self.goal] = 0
         self.explore_tree_back[self.goal] = self.goal       
-        heapq.heappush(self.open_set_for,
-                       (self.cost_total_for(self.source), self.source))
-        heapq.heappush(self.open_set_back,
-                       (self.cost_total_back(self.goal), self.goal))
+        heapq.heappush(self.open_set_for, (self.cost_total_for(self.source), self.source))
+        heapq.heappush(self.open_set_back, (self.cost_total_back(self.goal), self.goal))
+     
+    def searching(self):
+        self.torrent()
 
         point_meet = self.source
         while self.open_set_for and self.open_set_back:
             _, explore_point_for = heapq.heappop(self.open_set_for)
             self.close_set_for.append(explore_point_for)
             
-            if explore_point_for in self.explore_tree_back:  
+            if  self.explore_tree_back[explore_point_for]:  
                 point_meet = explore_point_for
                 break
 
             for neighbor_for in self.get_neighbor(explore_point_for):
                 new_cost = self.explore_base_for[explore_point_for] + self.cost_neighbor(explore_point_for, neighbor_for)
 
-                if neighbor_for not in self.explore_base_for:
-                    self.explore_base_for[neighbor_for] = math.inf
                 if new_cost < self.explore_base_for[neighbor_for]:
                     self.explore_base_for[neighbor_for] = new_cost
                     self.explore_tree_for[neighbor_for] = explore_point_for
@@ -147,15 +150,13 @@ class bidirectional_astar:
             _, explore_point_back = heapq.heappop(self.open_set_back)
             self.close_set_back.append(explore_point_back)
             
-            if explore_point_back in self.explore_tree_for:
+            if  self.explore_tree_for[explore_point_back]:
                 point_meet = explore_point_back
                 break
 
             for neighbor_back in self.get_neighbor(explore_point_back):
                 new_cost = self.explore_base_back[explore_point_back] + self.cost_neighbor(explore_point_back, neighbor_back)
 
-                if neighbor_back not in self.explore_base_back:
-                    self.explore_base_back[neighbor_back] = math.inf
                 if new_cost < self.explore_base_back[neighbor_back]:
                     self.explore_base_back[neighbor_back] = new_cost
                     self.explore_tree_back[neighbor_back] = explore_point_back

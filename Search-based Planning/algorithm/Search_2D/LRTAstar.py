@@ -1,7 +1,7 @@
 '''
-Learning_Real-time_Astar (LRTA*):
-Astar Comparison(real-time local-heuristic&path、N steps per-update): explore unknown env, skipout local-optima, improve learning efficiency.
-Attention: suitable update_heuristic(a process of passing local-distant-env to neighbor by heuristic before extracting path, but only local-info considered at each N steps, so finding a globally optimal solution is difficult)
+Learning_Real-time_Astar (LRTA*): loop N steps' local table_heuristic updated A*search, until find the goal --> explore unknown env, skipout local-optima.
+    Attention: 
+        1. suitable N、update_heuristic(update_heuristic, which can spread local-info to table_heuristic, is difficult to find a global optimal solution)
 '''
 
 import math
@@ -165,8 +165,7 @@ class lrtastar:
             self.explore_base = {local_source: 0}
             self.explore_tree = {local_source: local_source}
 
-            heapq.heappush(self.open_set,
-                        (self.cost_total(local_source), local_source))
+            heapq.heappush(self.open_set, (self.cost_total(local_source), local_source))
 
             count = 0
             while self.open_set:
@@ -188,6 +187,7 @@ class lrtastar:
 
                     if neighbor not in self.explore_base:
                         self.explore_base[neighbor] = math.inf
+                        self.explore_tree[neighbor] = None
                     if new_cost < self.explore_base[neighbor]:
                         self.explore_base[neighbor] = new_cost
                         self.explore_tree[neighbor] = explore_point
@@ -199,16 +199,16 @@ class lrtastar:
                         self.table_heuristic[point_heuristic] = heuristic_updated[point_heuristic]
 
                     local_path = self.extract_path_former(local_source)
-                    local_source = local_path[-1]
                     self.path.append(local_path)
                     self.visited.append(self.close_set)
+                    local_source = local_path[-1]
                     break
 
 def main():
     source = (5, 5)
     goal = (45, 25)
 
-    # sigle-step real-time interval
+    # real-time interval
     N = 250
 
     LRtastar = lrtastar(source, goal, N)

@@ -211,7 +211,7 @@ class dstar:
                         point_path = self.explore_tree[point_path]
                         path.append(point_path)
 
-                plot.animation("D*", path, False, "Dstar", [])
+                plot.animation("D*", path, True, "tst", [])
                 plt.gcf().canvas.draw_idle()
 
     def on_press_time(self, event, plot):
@@ -244,7 +244,7 @@ class dstar:
                         point_path = self.explore_tree[point_path]
                         path.append(point_path)
 
-                plot.animation("D*", path, False, "Dstar", [])
+                plot.animation("D*", path, True, "test", [])
                 plt.gcf().canvas.draw_idle()
 
 def main():

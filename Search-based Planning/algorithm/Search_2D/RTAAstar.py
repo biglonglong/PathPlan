@@ -1,7 +1,7 @@
 '''
-Real-time_Adaptive_Astar (RTAA*):
-LRTAstar Comparison(real-time local-optimal-goal): better global quality, less calculation.
-Attention: suitable N、movements(in update_local_goal, heuristic_updated is global, but local_goal is local, which makes extracting local-path is difficult[fallin local-eddies])
+Real-time_Adaptive_Astar (RTAA*): loop N steps' local global-goal updated A*search --> better global quality, less calculation.
+    Attention: 
+        1. suitable N、movements(heuristic_updated is global, but local_goal is local in update_local_goal, which makes extracting local-path is difficult)
 '''
 
 import math
@@ -160,8 +160,7 @@ class rtaastar:
             self.explore_base = {local_source: 0}
             self.explore_tree = {local_source: local_source}
 
-            heapq.heappush(self.open_set,
-                        (self.cost_total(local_source), local_source))
+            heapq.heappush(self.open_set, (self.cost_total(local_source), local_source))
 
             count = 0
             while self.open_set:
@@ -183,6 +182,7 @@ class rtaastar:
 
                     if neighbor not in self.explore_base:
                         self.explore_base[neighbor] = math.inf
+                        self.explore_tree[neighbor] = None
                     if new_cost < self.explore_base[neighbor]:
                         self.explore_base[neighbor] = new_cost
                         self.explore_tree[neighbor] = explore_point
@@ -194,19 +194,19 @@ class rtaastar:
                         self.table_heuristic[point_heuristic] = heuristic_updated[point_heuristic]
 
                     local_arrival, local_path = self.extract_path_former(local_source, local_goal)
-                    local_source = local_arrival
                     self.path.append(local_path)
                     self.visited.append(self.close_set)
+                    local_source = local_arrival
                     break
 
 def main():
     source = (5, 5)
     goal = (45, 25)
 
-    # sigle-step real-time interval
+    # real-time interval
     N = 240
 
-    # sigle-step extracting points
+    # extracting points
     movements = 20
 
     RTaastar = rtaastar(source, goal, N, movements)

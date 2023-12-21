@@ -1,5 +1,4 @@
-Overview
-======
+# Overview
 
 Path planning means that the robot automatically plans a path from the starting point to the goal point in the corresponding area, in which it needs to ensure that no collision occurs and the cost of pathfinding is low. Currently, the main problems of path planning are the difficulty of environment modeling, slow convergence of the algorithm, and easy to fall into the local optimal solution, and the usual solution is to improve the structure of the algorithm, increase the adaptive ability of the algorithm parameters, or combine the algorithms to optimize the algorithm performance. 
 
@@ -18,12 +17,11 @@ In addition, the project is based on [**zhm-real/PathPlanning**](https://github.
 <div align=right>
 <table>
   <tr>
-    <td><img src=".\Search-based Planning\map\gif\BFS.gif" alt="BFS" width="400"/></a></td>
-    <td><img src=".\Search-based Planning\map\gif\DFS.gif" alt="DFS" width="400"/></a></td>
+    <td><img src=".\Search-based Planning\map\gif\Bfs.gif" alt="BFS" width="400"/></a></td>
+    <td><img src=".\Search-based Planning\map\gif\Dfs.gif" alt="DFS" width="400"/></a></td>
   </tr>
 </table>
 </div>
-
 ### Best-First & Dijkstra
 
 <div align=right>
@@ -34,7 +32,6 @@ In addition, the project is based on [**zhm-real/PathPlanning**](https://github.
   </tr>
 </table>
 </div>
-
 ### A* and A* Variants
 
 <div align=right>
@@ -53,7 +50,7 @@ In addition, the project is based on [**zhm-real/PathPlanning**](https://github.
   </tr>
 </table>
 </div>
- D* and D* Variants
+###  D* and D* Variants (difficult)
 
 <div align=right>
 <table>

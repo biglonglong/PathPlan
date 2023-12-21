@@ -1,7 +1,7 @@
 '''
-Anytime_Repairing_Astar (ARA*): 
-Astar Comparison(weighted heuristic、incons): fasten searching suboptimal path, optimize suboptimal path.
-Attention: low_var_epsilon_init、var_epsilon_step、improve_path_break_iteration、fair cost(weighted heuristic, which makes points-near-source have larger cost_total comparing points-near-goal, leading to over-optimize points-near-goal)
+Anytime_Repairing_Astar (ARA*): incons_points remained repeated A*search, until var_epsilon < 1 --> fasten search and optimize suboptimal path
+    Attention: 
+        1. low var_epsilon_init、suitable var_epsilon_step、diminish iter_limitation、fair cost(weighted cost_heuristic, which makes points-near-source have larger cost_total comparing points-near-goal, leads to over-optimize points-near-goal)
 '''
 
 import math
@@ -106,16 +106,16 @@ class arastar:
         return list(path)
 
     def torrent(self):
-        self.explore_base[self.source] = 0
-        self.explore_base[self.goal] = math.inf
-        self.explore_tree[self.source] = self.source
+        for i in range(self.env.x_range):
+            for j in range(self.env.y_range):
+                self.explore_base[(i, j)] = math.inf
+                self.explore_tree[(i, j)] = None
 
-        heapq.heappush(self.open_set,
-                       (self.cost_total(self.source), self.source))
+        self.explore_base[self.source] = 0
+        self.explore_tree[self.source] = self.source
+        heapq.heappush(self.open_set, (self.cost_total(self.source), self.source))
 
     def improve_path(self, flag):
-        visited_each = []
-
         while self.open_set:
             cost_total_explore_point, explore_point = heapq.heappop(self.open_set)
             self.close_set.append(explore_point)
@@ -124,27 +124,22 @@ class arastar:
                 if explore_point == self.goal:
                     break
             else:
-                if cost_total_explore_point - self.iter_limitation>= self.explore_base[self.goal]:
+                if cost_total_explore_point - self.iter_limitation >= self.explore_base[self.goal]:
                     break
 
             for neighbor in self.get_neighbor(explore_point):
                 new_cost = self.explore_base[explore_point] + self.cost_neighbor(explore_point, neighbor)
 
-                if neighbor not in self.explore_base:
-                    self.explore_base[neighbor] = math.inf
                 if new_cost < self.explore_base[neighbor]:
                     self.explore_base[neighbor] = new_cost
                     self.explore_tree[neighbor] = explore_point
 
                     if neighbor not in self.close_set:
-                        heapq.heappush(self.open_set, 
-                                       (self.cost_total(neighbor), neighbor))
+                        heapq.heappush(self.open_set, (self.cost_total(neighbor), neighbor))
                     else:
-                        self.incons_set.append(neighbor)
+                        self.incons_set.append(neighbor)  
 
-                    visited_each.append(neighbor)     
-
-        self.visited.append(visited_each)
+        self.visited.append(self.close_set)
 
     def update_var_epsilon(self):
         degree_convergence = math.inf
@@ -163,7 +158,6 @@ class arastar:
         self.path.append(self.extract_path())
 
         while self.update_var_epsilon() > 1:
-
             self.var_epsilon -= self.var_epsilon_step
 
             for point in self.incons_set:
@@ -171,7 +165,6 @@ class arastar:
             
             self.incons_set = []
             self.close_set = []
-            
             self.improve_path(False)
             self.path.append(self.extract_path())
 
