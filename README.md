@@ -56,10 +56,11 @@ In addition, the project is based on [**zhm-real/PathPlanning**](https://github.
 <table>
   <tr>
     <td><img src=".\Search-based Planning\map\gif\Dstar.gif" alt="Dstar" width="400"/></a></td>
-    <td><img src=".\Search-based Planning\map\gif\1.gif" alt="1" width="400"/></a></td>
+    <td><img src=".\Search-based Planning\map\gif\.gif" alt="" width="400"/></a></td>
   </tr>
 </table>
 </div>
+
 
 
 
