@@ -1,5 +1,5 @@
 """
-Anytime_Dstar (AD*): combination of ARAstar and LPAstar, combination of advantages and disadvantages, ARAstar make LPAstar explore fast, but also distrub its rules(catch a local death cycle)
+Anytime_Dstar (AD*): combination of ARAstar and LPAstar, ARAstar make LPAstar explore fast, but also distrub its rules(more point-near-source explored)
 """
 
 import math
@@ -14,7 +14,7 @@ from map import Plotting
 from map import Env_Base
 
 class adstar:
-    def __init__(self, source, goal, var_epsilon, var_epsilon_step, tolerance_level, significant_standard):
+    def __init__(self, source, goal, var_epsilon, var_epsilon_step, iter_limitation, cost_gain, significant_standard):
         self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
@@ -23,20 +23,19 @@ class adstar:
         self.motions = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
         self.open_set = []
-        self.closed_set = []
+        self.close_set = []
         self.incons_set = [] 
         self.g = dict()             # suitable cost_goal after setting obs
         self.rhs = dict()           # current cost_goal
 
-        self.path = []
-        self.visited = []
-
-        self.tolerance_level = tolerance_level
-
-        self.var_epsilon_top = var_epsilon
         self.var_epsilon = var_epsilon
         self.var_epsilon_step = var_epsilon_step
+        self.var_epsilon_top = var_epsilon
+
+        self.iter_limitation = iter_limitation
         
+        self.cost_gain = cost_gain
+
         self.count = 0
         self.significant_standard = significant_standard
         self.count_top = math.ceil(max(var_epsilon - 1.0, 0.0) / var_epsilon_step) + significant_standard
@@ -145,7 +144,7 @@ class adstar:
                 break
 
         if self.g[point] != self.rhs[point]:
-            if point not in self.closed_set:
+            if point not in self.close_set:
                 heapq.heappush(self.open_set, (self.calculate_key(point), point))
             else:
                 self.incons_set.append(point)
@@ -154,15 +153,14 @@ class adstar:
         while self.open_set:
             min_key, explore_point = heapq.heappop(self.open_set)
 
-            # if min_key >= self.calculate_key(self.source) and self.g[self.source] == self.rhs[self.source]:
-            #     break
-            if self.rhs[explore_point] >= self.rhs[self.source] + self.tolerance_level:
+            if (min_key[0] - self.cost_gain - self.iter_limitation, min_key[1] - self.cost_gain - self.iter_limitation) >= \
+                self.calculate_key(self.source) and self.g[self.source] == self.rhs[self.source]:
                 break
 
             # confirm g after setting obs
             if self.g[explore_point] > self.rhs[explore_point]:  
                 self.g[explore_point] = self.rhs[explore_point]
-                self.closed_set.append(explore_point)
+                self.close_set.append(explore_point)
             # recompute doubtful points
             else:
                 self.g[explore_point] = math.inf       
@@ -176,9 +174,11 @@ class adstar:
         self.torrent()
         self.compute_shortest_path()
 
-        return self.extract_path(), self.closed_set
+        return self.extract_path(), self.close_set
 
     def replan(self, changed_point):
+        self.update_rhs(changed_point)
+
         for neighbor in self.get_neighbor(changed_point):
             self.update_rhs(neighbor)
 
@@ -193,7 +193,8 @@ class adstar:
         for point in self.incons_set:
             heapq.heappush(self.open_set, (self.calculate_key(point), point))
 
-        self.closed_set = []
+        self.close_set = []
+        self.incons_set = []
         self.compute_shortest_path()
 
     def on_press(self, event, plot):
@@ -203,12 +204,9 @@ class adstar:
         else:
             if (x, y) not in self.obs:
                 self.obs.add((x, y))
-                self.g[(x, y)] = math.inf
-                self.rhs[(x, y)] = math.inf
                 print("add obstacle at: ", (x, y))
             else:
                 self.obs.remove((x, y))
-                self.update_rhs((x, y))
                 print("remove obstacle at: ", (x, y))
             plot.update_obs_dynamic((x, y))
 
@@ -218,20 +216,23 @@ class adstar:
             plt.gcf().canvas.draw_idle()
 
 def main():
-    source = (5, 25)
-    goal = (45, 5)
-
-    # more iteration, more optimal path
-    tolerance_level = 5.0
+    source = (5, 5)
+    goal = (45, 25)
 
     # get points-near-source optimal path
     var_epsilon = 1.8
     var_epsilon_step = 0.2
 
+    # more iteration, more optimal path
+    iter_limitation = 2.5
+
+    # maximum difference between the new path and the previous path
+    cost_gain = 2.5
+
     # significant edge cost changes
     significant_standard = 2
 
-    ADstar = adstar(source, goal, var_epsilon, var_epsilon_step, tolerance_level, significant_standard)
+    ADstar = adstar(source, goal, var_epsilon, var_epsilon_step, iter_limitation, cost_gain, significant_standard)
     plot = Plotting.plotting(source, goal)
     path, visited = ADstar.plan()
     plot.animation("Anytime_Dstar (AD*)", path, False, "ADstar", visited)

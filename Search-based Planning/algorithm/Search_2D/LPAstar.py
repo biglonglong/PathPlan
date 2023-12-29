@@ -1,12 +1,12 @@
 """
-Lifelong_Planning_Astar (LPA*):plan by A*, replan by update_rhs and compute_shortest_path,  which latter-search new-close neighbor until min_key >= cost_total(goal)
+Lifelong_Planning_Astar (LPA*):plan by A*, replan by update_rhs and compute_shortest_path,  which latter-search new-close neighbor until min_key - cost_gain >= cost_total(goal)
     Attention: 
         1. fuse(cost_neighbor(point, new_obs) is math.inf)
         2. replan & on_press
             (1) compute_shortest_path: latter update neighbor's rhs and confirm g
             (2) extract_path: recursively find the best neighbor node
             (3) more debug, more comprehension
-        4. break condition(min_key >= cost_total(goal)) can't prove that collision_point path is optimal, beacuase the new-setting obs will increase key of all point blocked but cost_total(goal)) not
+        4. break condition(min_key >= cost_total(goal)) can't prove that collision_point path is optimal, beacuase the new-setting obs will increase key of all point blocked but cost_total(goal)) not, error all caused by this
 """
 
 import math
@@ -21,7 +21,7 @@ from map import Plotting
 from map import Env_Base
 
 class lpastar:
-    def __init__(self, source, goal, tolerance_level):
+    def __init__(self, source, goal, cost_gain):
         self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
@@ -30,11 +30,11 @@ class lpastar:
         self.motions = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
         self.open_set = []
-        self.closed_set = []
+        self.close_set = []
         self.g = dict()             # suitable cost_source after setting obs
         self.rhs = dict()           # current cost_source
 
-        self.tolerance_level = tolerance_level
+        self.cost_gain = cost_gain
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
         if point in self.obs:
@@ -88,12 +88,10 @@ class lpastar:
             return x_dis + y_dis
 
     def extract_path(self): 
-        length_top = 100
-
         path = [self.goal]
         point_path = self.goal
 
-        while length_top:
+        while True:
             min_cost = math.inf
             close_neighbor = None
 
@@ -108,9 +106,7 @@ class lpastar:
 
             if point_path == self.source:
                 break
-            
-            length_top -= 1
-
+        
         return list(path)
 
     def torrent(self):
@@ -142,11 +138,10 @@ class lpastar:
     def compute_shortest_path(self):
         while self.open_set:
             min_key, explore_point = heapq.heappop(self.open_set)
-            self.closed_set.append(explore_point)
+            self.close_set.append(explore_point)
 
-            # if min_key >= self.calculate_key(self.goal) and self.g[self.goal] == self.rhs[self.goal] and self.g[self.goal] != math.inf:
-            #     break
-            if self.rhs[explore_point] >= self.rhs[self.goal] + self.tolerance_level:
+            if (min_key[0] - self.cost_gain, min_key[1] - self.cost_gain) >= self.calculate_key(self.goal) and \
+                self.g[self.goal] == self.rhs[self.goal]:
                 break
 
             # confirm g after setting obs
@@ -165,9 +160,11 @@ class lpastar:
         self.torrent()
         self.compute_shortest_path()
 
-        return self.extract_path(), self.closed_set
+        return self.extract_path(), self.close_set
 
     def replan(self, changed_point):
+        self.update_rhs(changed_point)
+
         for neighbor in self.get_neighbor(changed_point):
             self.update_rhs(neighbor)
 
@@ -180,12 +177,9 @@ class lpastar:
         else:
             if (x, y) not in self.obs:
                 self.obs.add((x, y))
-                self.g[(x, y)] = math.inf
-                self.rhs[(x, y)] = math.inf
                 print("add obstacle at: ", (x, y))
             else:
                 self.obs.remove((x, y))
-                self.update_rhs((x, y))
                 print("remove obstacle at: ", (x, y))
             plot.update_obs_dynamic((x, y))
 
@@ -198,10 +192,10 @@ def main():
     source = (5, 5)
     goal = (45, 25)
 
-    # expected depth of exploration
-    tolerance_level = 2.5
+    # maximum difference between the new path and the previous path
+    cost_gain = 2.5
 
-    LPatar = lpastar(source, goal, tolerance_level)
+    LPatar = lpastar(source, goal, cost_gain)
     plot = Plotting.plotting(source, goal)
     path, visited = LPatar.plan()
     plot.animation("Lifelong_Planning_Astar (LPA*)", path, False, "LPAstar", visited)

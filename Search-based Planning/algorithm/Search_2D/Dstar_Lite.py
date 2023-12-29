@@ -23,7 +23,7 @@ class dstar_lite:
         self.motions = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
         self.open_set = []
-        self.closed_set = []
+        self.close_set = []
         self.g = dict()             # suitable cost_source after setting obs
         self.rhs = dict()           # current cost_source
 
@@ -136,7 +136,7 @@ class dstar_lite:
     def compute_shortest_path(self):
         while self.open_set:
             mink_ep, explore_point = heapq.heappop(self.open_set)
-            self.closed_set.append(explore_point)
+            self.close_set.append(explore_point)
 
             # if mink_ep >= self.calculate_key(self.source) and self.g[self.source] == self.rhs[self.source]:
             #     break
@@ -161,7 +161,7 @@ class dstar_lite:
         self.torrent()
         self.compute_shortest_path()
 
-        return self.extract_path(), self.closed_set
+        return self.extract_path(), self.close_set
 
     def replan(self, changed_point):
         for neighbor in self.get_neighbor(changed_point):

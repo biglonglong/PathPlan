@@ -32,7 +32,7 @@ class dstar:
         self.motions = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
         self.open_set = []
-        self.closed_set = []
+        self.close_set = []
         self.t = dict()         # state
         self.h = dict()         # current_cost_goal
         self.k = dict()         # minest_cost_goal
@@ -120,7 +120,7 @@ class dstar:
 
     def process_state(self):
         mink_ep, ep = heapq.heappop(self.open_set)
-        self.closed_set.append(ep)
+        self.close_set.append(ep)
         self.t[ep] = 'CLOSED'
 
         for neighbor in self.get_neighbor(ep):
@@ -165,7 +165,7 @@ class dstar:
             if self.t.get(self.source) == 'CLOSED':
                 break
 
-        return self.extract_path(), self.closed_set
+        return self.extract_path(), self.close_set
 
     def replan(self, point_path):
         while True:
