@@ -50,16 +50,17 @@ In addition, the project is based on [**zhm-real/PathPlanning**](https://github.
   </tr>
 </table>
 </div>
-###  D* and D* Variants (difficult)
+###  D* and D* Variants
 
 <div align=right>
 <table>
   <tr>
     <td><img src=".\Search-based Planning\map\gif\Dstar.gif" alt="Dstar" width="400"/></a></td>
-    <td><img src=".\Search-based Planning\map\gif\.gif" alt="" width="400"/></a></td>
+    <td><img src=".\Search-based Planning\map\gif\LPAstar.gif" alt="LPAstar" width="400"/></a></td>
   </tr>
 </table>
 </div>
+
 
 
 

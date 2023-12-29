@@ -1,10 +1,12 @@
 """
-Lifelong_Planning_Astar (LPA*): plan by A*, replan by update_rhs and compute_shortest_path,  which latter-search another path until min_key >= cost_total(goal)
+Lifelong_Planning_Astar (LPA*):plan by A*, replan by update_rhs and compute_shortest_path,  which latter-search new-close neighbor until min_key >= cost_total(goal)
     Attention: 
         1. fuse(cost_neighbor(point, new_obs) is math.inf)
-        2. update_rhs(update new_rhs of point and push into open_set)
-        3. compute_shortest_path(update g a suitable explore_base for extract for change blocked path)   more debug, more comprehension
-        4. break condition(min_key >= cost_total(goal) prove that collision_point path is optimal)
+        2. replan & on_press
+            (1) compute_shortest_path: latter update neighbor's rhs and confirm g
+            (2) extract_path: recursively find the best neighbor node
+            (3) more debug, more comprehension
+        4. break condition(min_key >= cost_total(goal)) can't prove that collision_point path is optimal, beacuase the new-setting obs will increase key of all point blocked but cost_total(goal)) not
 """
 
 import math
@@ -19,7 +21,7 @@ from map import Plotting
 from map import Env_Base
 
 class lpastar:
-    def __init__(self, source, goal):
+    def __init__(self, source, goal, tolerance_level):
         self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
@@ -29,8 +31,10 @@ class lpastar:
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
         self.open_set = []
         self.closed_set = []
-        self.g = dict()      # suitable explore_base after compute_shortest_path
-        self.rhs = dict()    # real-time cost_source
+        self.g = dict()             # suitable cost_source after setting obs
+        self.rhs = dict()           # current cost_source
+
+        self.tolerance_level = tolerance_level
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
         if point in self.obs:
@@ -43,14 +47,8 @@ class lpastar:
         else:
             return abs(goal[0] - point[0]) + abs(goal[1] - point[1])
 
-    def get_neighbor(self, point):         # get neighbor different from Astar
-        neighbors = []
-        for move in self.motions:
-            neighbor = point[0] + move[0], point[1] + move[1]
-            if neighbor[0] >=0 and neighbor[0] < self.env.x_range and neighbor[1] >=0 and neighbor[1] < self.env.y_range:
-                neighbors.append(neighbor)
-        
-        return neighbors
+    def get_neighbor(self, point):
+        return [(point[0] + move[0], point[1] + move[1]) for move in self.motions]
 
     def is_collision(self, start, end):
         if start in self.obs or end in self.obs:
@@ -89,32 +87,33 @@ class lpastar:
         else:
             return x_dis + y_dis
 
-    def extract_path(self):
+    def extract_path(self): 
         path = [self.goal]
         point_path = self.goal
 
         while True:
             min_cost = math.inf
-            closest_neighbor = None
-            for neighbor in self.get_neighbor(point_path):
-                cost_point_path = self.g[neighbor] + self.cost_neighbor(neighbor, point_path)
-                if cost_point_path < min_cost:
-                    min_cost = cost_point_path
-                    closest_neighbor = neighbor
+            close_neighbor = None
 
-            point_path = closest_neighbor
+            for neighbor in self.get_neighbor(point_path):
+                    cost_point_path = self.g[neighbor] + self.cost_neighbor(neighbor, point_path)
+                    if cost_point_path < min_cost:
+                        min_cost = cost_point_path
+                        close_neighbor = neighbor
+
+            point_path = close_neighbor
             path.append(point_path)
 
             if point_path == self.source:
                 break
-        
+
         return list(path)
 
     def torrent(self):
         for i in range(self.env.x_range):
             for j in range(self.env.y_range):
                self.g[(i, j)] = math.inf
-               self.rhs[(i, j)] = math.inf
+               self.rhs[(i, j)] = math.inf     
 
         self.rhs[self.source] = 0
         heapq.heappush(self.open_set, (self.calculate_key(self.source), self.source))
@@ -123,37 +122,38 @@ class lpastar:
         return min(self.g[point], self.rhs[point]) + self.cost_heuristic(point), min(self.g[point], self.rhs[point])
 
     def update_rhs(self, point):   
-        # condition1: update-path -> consistent
-        # condition2: unupdate-path -> consistent
-        # condition3: update-path -> inconsistent -> repush
-
         if point != self.source:
-            self.rhs[point] = min(self.g[neighbor] + self.cost_neighbor(neighbor, point)
-                                    for neighbor in self.get_neighbor(point))
+            self.rhs[point] = min([math.inf] if point in self.obs else 
+                                    [self.g[neighbor] + self.cost_neighbor(neighbor, point)
+                                        for neighbor in self.get_neighbor(point)])
         
         for item in self.open_set:
             if item[1] == point:
                 self.open_set.remove(item)
                 break
+
         if self.g[point] != self.rhs[point]:
             heapq.heappush(self.open_set, (self.calculate_key(point), point))
  
     def compute_shortest_path(self):
-        while True:
+        while self.open_set:
             min_key, explore_point = heapq.heappop(self.open_set)
             self.closed_set.append(explore_point)
 
-            if min_key >= self.calculate_key(self.goal) and self.g[self.goal] == self.rhs[self.goal]:
+            # if min_key >= self.calculate_key(self.goal) and self.g[self.goal] == self.rhs[self.goal]:
+            #     break
+            if self.rhs[explore_point] >= self.rhs[self.goal] + self.tolerance_level:
                 break
 
-            # optimaed&update2consistent
+            # confirm g after setting obs
             if self.g[explore_point] > self.rhs[explore_point]:  
                 self.g[explore_point] = self.rhs[explore_point]
-            # update2unconsistent&low_rank_openset&waiting to optima
+            # recompute doubtful points
             else:
                 self.g[explore_point] = math.inf       
                 self.update_rhs(explore_point)   
 
+            # spread rhs from neighbor
             for neighbor in self.get_neighbor(explore_point):
                 self.update_rhs(neighbor)
 
@@ -164,7 +164,8 @@ class lpastar:
         return self.extract_path(), self.closed_set
 
     def replan(self, changed_point):
-        self.update_rhs(changed_point)
+        self.g[changed_point] = math.inf
+        self.rhs[changed_point] = math.inf
 
         for neighbor in self.get_neighbor(changed_point):
             self.update_rhs(neighbor)
@@ -193,7 +194,10 @@ def main():
     source = (5, 5)
     goal = (45, 25)
 
-    LPatar = lpastar(source, goal)
+    # expected depth of exploration
+    tolerance_level = 2.5
+
+    LPatar = lpastar(source, goal, tolerance_level)
     plot = Plotting.plotting(source, goal)
     path, visited = LPatar.plan()
     plot.animation("Lifelong_Planning_Astar (LPA*)", path, False, "LPAstar", visited)

@@ -9,15 +9,19 @@ class plotting:
         self.source, self.goal = source, goal
         self.env = Env_Base.env()
         self.obs = self.env.obs
-        self.obs_dynamic = set()
+        self.obs_dynamic = dict()
 
         self.ims = [[]]
         
-    def update_obs_dynamic(self, obs_dynamic):
-        if obs_dynamic not in self.obs_dynamic:
-            self.obs_dynamic.add(obs_dynamic)
+    def update_obs_dynamic(self, obs):
+        if obs not in self.obs_dynamic:
+            self.obs_dynamic[obs] = "black"
+
         else:
-            self.obs_dynamic.remove(obs_dynamic)
+            if self.obs_dynamic[obs] == "black":
+                self.obs_dynamic[obs] = "white"
+            else:
+                self.obs_dynamic[obs] = "black"
 
     def plot_env(self, name):
         base_obs_x = [obs[0] for obs in self.env.obs]
@@ -30,11 +34,12 @@ class plotting:
         plt.plot(self.goal[0], self.goal[1], color="green", marker="s")
         plt.plot(base_obs_x, base_obs_y, "ks")
 
-        dynamic_obs_x = [obs[0] for obs in self.obs_dynamic]
-        dynamic_obs_y = [obs[1] for obs in self.obs_dynamic]
-
-        plot_obs = plt.plot(dynamic_obs_x, dynamic_obs_y, "ks")
-        self.ims.append(self.ims[-1] + plot_obs)
+        plot_obs_dynamic = []
+        for point,cl in self.obs_dynamic.items():
+            plot_obs = plt.plot(point[0], point[1], color = cl, marker="s")
+            plot_obs_dynamic = plot_obs_dynamic + plot_obs
+    
+        self.ims.append(self.ims[-1] + plot_obs_dynamic)
         plt.pause(1.0)
 
     def plot_visited(self, color_visited, *args):

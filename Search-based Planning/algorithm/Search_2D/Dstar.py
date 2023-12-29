@@ -1,5 +1,5 @@
 '''
-D*: plan by dijkstra from goal to source, move by explore_tree and if is_collision in dynamic map, replan by process_state, which former-search another path until mink_ep >= h[collision_point]
+D*: plan by dijkstra from goal to source, move by explore_tree and if is_collision in dynamic map, replan by process_state, which former-search exit point until mink_ep >= h[collision_point]
     Attention: 
         1. fuse(cost_neighbor(point, new_obs) is math.inf)
         2. replan & on_press
@@ -157,8 +157,6 @@ class dstar:
                 else:
                     pass
 
-        return self.open_set[0][0]
-
     def plan(self):
         self.torrent()        
 
@@ -171,14 +169,14 @@ class dstar:
 
     def replan(self, point_path):
         while True:
-            mink_ep = self.process_state()
-
-            if mink_ep >= self.h[point_path]:
-                break
+            self.process_state()
 
             if len(self.open_set) == 0:
                 print("no path finded until no point explored")
                 sys.exit(0)
+
+            if self.open_set[0][0] >= self.h[point_path]:
+                break
 
     def on_press(self, event, plot):
         x, y = round(event.xdata), round(event.ydata)
