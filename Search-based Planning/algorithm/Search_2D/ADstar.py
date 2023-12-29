@@ -1,12 +1,5 @@
 """
-Lifelong_Planning_Astar (LPA*):plan by A*, replan by update_rhs and compute_shortest_path,  which latter-search new-close neighbor until min_key >= cost_total(goal)
-    Attention: 
-        1. fuse(cost_neighbor(point, new_obs) is math.inf)
-        2. replan & on_press
-            (1) compute_shortest_path: latter update neighbor's rhs and confirm g
-            (2) extract_path: recursively find the best neighbor node
-            (3) more debug, more comprehension
-        4. break condition(min_key >= cost_total(goal)) can't prove that collision_point path is optimal, beacuase the new-setting obs will increase key of all point blocked but cost_total(goal)) not
+Anytime_Dstar (AD*): combination of ARAstar and LPAstar, combination of advantages and disadvantages, ARAstar make LPAstar explore fast, but also distrub its rules(catch a local death cycle)
 """
 
 import math
@@ -20,8 +13,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + r"\..\..")
 from map import Plotting
 from map import Env_Base
 
-class lpastar:
-    def __init__(self, source, goal, tolerance_level):
+class adstar:
+    def __init__(self, source, goal, var_epsilon, var_epsilon_step, tolerance_level, significant_standard):
         self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
@@ -31,16 +24,28 @@ class lpastar:
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
         self.open_set = []
         self.closed_set = []
-        self.g = dict()             # suitable cost_source after setting obs
-        self.rhs = dict()           # current cost_source
+        self.incons_set = [] 
+        self.g = dict()             # suitable cost_goal after setting obs
+        self.rhs = dict()           # current cost_goal
+
+        self.path = []
+        self.visited = []
 
         self.tolerance_level = tolerance_level
+
+        self.var_epsilon_top = var_epsilon
+        self.var_epsilon = var_epsilon
+        self.var_epsilon_step = var_epsilon_step
+        
+        self.count = 0
+        self.significant_standard = significant_standard
+        self.count_top = math.ceil(max(var_epsilon - 1.0, 0.0) / var_epsilon_step) + significant_standard
 
     def cost_heuristic(self, point, heuristic_type = "euclidean"):
         if point in self.obs:
             return math.inf
 
-        goal = self.goal
+        goal = self.source
 
         if heuristic_type == "euclidean":
             return math.hypot(goal[0] - point[0], goal[1] - point[1])
@@ -119,14 +124,17 @@ class lpastar:
                self.g[(i, j)] = math.inf
                self.rhs[(i, j)] = math.inf     
 
-        self.rhs[self.source] = 0
-        heapq.heappush(self.open_set, (self.calculate_key(self.source), self.source))
+        self.rhs[self.goal] = 0
+        heapq.heappush(self.open_set, (self.calculate_key(self.goal), self.goal))
 
     def calculate_key(self, point):
-        return min(self.g[point], self.rhs[point]) + self.cost_heuristic(point), min(self.g[point], self.rhs[point])
+        if self.g[point] > self.rhs[point]:
+            return self.rhs[point] + self.var_epsilon * self.cost_heuristic(point), self.rhs[point]
+        else:
+            return self.g[point] + self.cost_heuristic(point), self.g[point]
 
     def update_rhs(self, point):   
-        if point != self.source:
+        if point != self.goal:
             self.rhs[point] = min([math.inf] if point in self.obs else 
                                     [self.g[neighbor] + self.cost_neighbor(neighbor, point)
                                         for neighbor in self.get_neighbor(point)])
@@ -137,21 +145,24 @@ class lpastar:
                 break
 
         if self.g[point] != self.rhs[point]:
-            heapq.heappush(self.open_set, (self.calculate_key(point), point))
+            if point not in self.closed_set:
+                heapq.heappush(self.open_set, (self.calculate_key(point), point))
+            else:
+                self.incons_set.append(point)
  
     def compute_shortest_path(self):
         while self.open_set:
             min_key, explore_point = heapq.heappop(self.open_set)
-            self.closed_set.append(explore_point)
 
-            # if min_key >= self.calculate_key(self.goal) and self.g[self.goal] == self.rhs[self.goal]:
+            # if min_key >= self.calculate_key(self.source) and self.g[self.source] == self.rhs[self.source]:
             #     break
-            if self.rhs[explore_point] >= self.rhs[self.goal] + self.tolerance_level:
+            if self.rhs[explore_point] >= self.rhs[self.source] + self.tolerance_level:
                 break
 
             # confirm g after setting obs
             if self.g[explore_point] > self.rhs[explore_point]:  
                 self.g[explore_point] = self.rhs[explore_point]
+                self.closed_set.append(explore_point)
             # recompute doubtful points
             else:
                 self.g[explore_point] = math.inf       
@@ -171,6 +182,18 @@ class lpastar:
         for neighbor in self.get_neighbor(changed_point):
             self.update_rhs(neighbor)
 
+        self.count += 1
+        if self.count == self.count_top:
+                self.count = 1
+                self.var_epsilon = self.var_epsilon_top
+
+        if self.var_epsilon > 1.0:
+            self.var_epsilon -= self.var_epsilon_step
+
+        for point in self.incons_set:
+            heapq.heappush(self.open_set, (self.calculate_key(point), point))
+
+        self.closed_set = []
         self.compute_shortest_path()
 
     def on_press(self, event, plot):
@@ -191,22 +214,29 @@ class lpastar:
 
             self.replan((x, y))
 
-            plot.animation("Lifelong_Planning_Astar (LPA*)", self.extract_path(), False, "LPAstar", [])
+            plot.animation("Anytime_Dstar (AD*)", self.extract_path(), False, "ADstar", [])
             plt.gcf().canvas.draw_idle()
-                
+
 def main():
-    source = (5, 5)
-    goal = (45, 25)
+    source = (5, 25)
+    goal = (45, 5)
 
-    # expected depth of exploration
-    tolerance_level = 2.5
+    # more iteration, more optimal path
+    tolerance_level = 5.0
 
-    LPatar = lpastar(source, goal, tolerance_level)
+    # get points-near-source optimal path
+    var_epsilon = 1.8
+    var_epsilon_step = 0.2
+
+    # significant edge cost changes
+    significant_standard = 2
+
+    ADstar = adstar(source, goal, var_epsilon, var_epsilon_step, tolerance_level, significant_standard)
     plot = Plotting.plotting(source, goal)
-    path, visited = LPatar.plan()
-    plot.animation("Lifelong_Planning_Astar (LPA*)", path, False, "LPAstar", visited)
+    path, visited = ADstar.plan()
+    plot.animation("Anytime_Dstar (AD*)", path, False, "ADstar", visited)
 
-    plt.gcf().canvas.mpl_connect('button_press_event',  lambda event: LPatar.on_press(event, plot=plot))
+    plt.gcf().canvas.mpl_connect('button_press_event',  lambda event: ADstar.on_press(event, plot=plot))
     plt.show()
 
 if __name__ == '__main__':
