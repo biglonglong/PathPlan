@@ -61,13 +61,15 @@ In addition, the project is based on [**zhm-real/PathPlanning**](https://github.
 </table>
 <table>
   <tr>
+    <td><img src=".\Search-based Planning\map\gif\Dstar_Lite.gif" alt="Dstar_Lite" width="400"/></a></td>
     <td><img src=".\Search-based Planning\map\gif\ADstar.gif" alt="ADstar" width="400"/></a></td>
-    <td><img src=".\Search-based Planning\map\gif\.gif" alt="" width="400"/></a></td>
   </tr>
 </table>
 </div>
 
 
+
+## Sampling-based Planning
 
 
 
@@ -78,8 +80,6 @@ In addition, the project is based on [**zhm-real/PathPlanning**](https://github.
 genetic algorithm ()
 ACO algorithm ()
 particle swarm algorithm ()
-
-## Sampling-based Planning
 
 
 ## Reinforcement Learning

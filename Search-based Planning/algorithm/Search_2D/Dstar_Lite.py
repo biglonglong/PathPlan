@@ -1,5 +1,7 @@
 """
-D*_Lite: combination of ARAstar and LPAstar, combination of advantages and disadvantages, ARAstar make LPAstar explore fast, but also distrub its rules(catch a local death cycle)
+D*_Lite: combination of Dstar and LPAstar,explore path with changing start constantly, new-obs only effect point between new-obs and goal, repair key of cost_heuristic(km) to make prioritization-explore these points
+# check #
+km what?
 """
 
 import math
@@ -14,7 +16,7 @@ from map import Plotting
 from map import Env_Base
 
 class dstar_lite:
-    def __init__(self, source, goal, tolerance_level):
+    def __init__(self, source, goal, cost_gain):
         self.env = Env_Base.env()
         self.obs = self.env.obs
         self.source = source
@@ -27,14 +29,15 @@ class dstar_lite:
         self.g = dict()             # suitable cost_source after setting obs
         self.rhs = dict()           # current cost_source
 
-        self.tolerance_level = tolerance_level
+        self.cost_gain = cost_gain
+        self.start = source
         self.km = 0
 
-    def cost_heuristic(self, point, heuristic_type = "euclidean"):
+    def cost_heuristic(self, point, start, heuristic_type = "euclidean"):
         if point in self.obs:
             return math.inf
 
-        goal = self.source
+        goal = start
 
         if heuristic_type == "euclidean":
             return math.hypot(goal[0] - point[0], goal[1] - point[1])
@@ -117,7 +120,7 @@ class dstar_lite:
         heapq.heappush(self.open_set, (self.calculate_key(self.goal), self.goal))
 
     def calculate_key(self, point):
-        return min(self.g[point], self.rhs[point]) + self.cost_heuristic(point) + self.km, min(self.g[point], self.rhs[point])
+        return min(self.g[point], self.rhs[point]) + self.cost_heuristic(point, self.start) + self.km, min(self.g[point], self.rhs[point])
 
     def update_rhs(self, point):   
         if point != self.goal:
@@ -138,24 +141,25 @@ class dstar_lite:
             mink_ep, explore_point = heapq.heappop(self.open_set)
             self.close_set.append(explore_point)
 
-            # if mink_ep >= self.calculate_key(self.source) and self.g[self.source] == self.rhs[self.source]:
-            #     break
-            if self.rhs[explore_point] >= self.rhs[self.source] + self.tolerance_level:
+            if (mink_ep[0] - self.cost_gain, mink_ep[1] - self.cost_gain) >= self.calculate_key(self.start) and \
+                self.g[self.start] == self.rhs[self.start]:
                 break
 
-            if mink_ep < self.calculate_key(explore_point):
+            # repair key of cost_heuristic(km)
+            if mink_ep < self.calculate_key(explore_point):   
                 heapq.heappush(self.open_set, (self.calculate_key(explore_point), explore_point))
-            # confirm g after setting obs
-            elif self.g[explore_point] > self.rhs[explore_point]:  
-                self.g[explore_point] = self.rhs[explore_point]
-            # recompute doubtful points
-            else:
-                self.g[explore_point] = math.inf       
-                self.update_rhs(explore_point)   
 
-            # spread rhs from neighbor
-            for neighbor in self.get_neighbor(explore_point):
-                self.update_rhs(neighbor)
+            else:
+                # confirm g after setting obs
+                if self.g[explore_point] > self.rhs[explore_point]:  
+                    self.g[explore_point] = self.rhs[explore_point]
+                # recompute doubtful points
+                else:
+                    self.g[explore_point] = math.inf       
+                    self.update_rhs(explore_point)   
+                # spread rhs from neighbor
+                for neighbor in self.get_neighbor(explore_point):
+                    self.update_rhs(neighbor)
 
     def plan(self):
         self.torrent()
@@ -185,19 +189,44 @@ class dstar_lite:
                 print("remove obstacle at: ", (x, y))
             plot.update_obs_dynamic((x, y))
 
-            self.replan((x, y))
+            self.start = self.source
+            self.km = 0
 
-            plot.animation("D*_Lite", self.extract_path(), False, "Dstar_Lite", [])
+            cur_point_path = self.start
+            path = [self.start]
+            length_top = 100
+
+            while cur_point_path != self.goal and length_top:
+                min_cost = math.inf
+                close_neighbor = None
+
+                for neighbor in self.get_neighbor(cur_point_path):
+                        
+                        cost_point_path = self.g[neighbor] + self.cost_neighbor(neighbor, cur_point_path)
+                        if cost_point_path < min_cost:
+                            min_cost = cost_point_path
+                            close_neighbor = neighbor
+
+                        if neighbor == (x, y):
+                            self.km += self.cost_heuristic(self.start, cur_point_path)
+                            self.start = cur_point_path
+                            self.replan((x, y))
+                
+                cur_point_path = close_neighbor
+                path.append(cur_point_path)
+                length_top -= 1
+
+            plot.animation("D*_Lite", path, True, "Dstar_Lite", [])
             plt.gcf().canvas.draw_idle()
                 
 def main():
     source = (5, 5)
     goal = (45, 25)
 
-    # expected depth of exploration
-    tolerance_level = 2.5
+    # maximum difference between the new path and the previous path
+    cost_gain = 2.5
 
-    DStar_LIte = dstar_lite(source, goal, tolerance_level)
+    DStar_LIte = dstar_lite(source, goal, cost_gain)
     plot = Plotting.plotting(source, goal)
     path, visited = DStar_LIte.plan()
     plot.animation("D*_Lite", path, False, "Dstar_Lite", visited)
